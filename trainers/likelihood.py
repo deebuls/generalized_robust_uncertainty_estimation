@@ -28,10 +28,12 @@ class Likelihood:
             self.loss_function = nll.losses.gaussian_nll_loss
         elif "laplace" == loss_type:
             self.loss_function = nll.losses.laplace_nll_loss
-        elif "Generalized" == loss_type:
+        elif "generalized" == loss_type:
             self.loss_function = nll.losses.generalized_nll_loss
         elif "mse" == loss_type:
             self.loss_function = edl.losses.MSE
+        else:
+            raise 'value_error'
 
         self.optimizer = tf.optimizers.Adam(learning_rate)
 
@@ -62,8 +64,9 @@ class Likelihood:
     def run_train_step(self, x, y):
         with tf.GradientTape() as tape:
             y_hat = self.model(x, training=True) #forward pass
-            if "Generalized" == self.loss_type:
-                mu, alpha, beta  = tf.split(y_hat, 2, axis=-1)
+            if "generalized" == self.loss_type:
+                mu, alpha, beta  = tf.split(y_hat, 3, axis=-1)
+                beta = 1.0 + beta
                 loss = self.loss_function(mu, y, alpha, beta)
             else:
                 mu, var = tf.split(y_hat, 2, axis=-1)
@@ -77,11 +80,13 @@ class Likelihood:
     @tf.function
     def evaluate(self, x, y):
         pred = self.model(x, training=False) #forward pass
-        if "Generalized" == self.loss_type:
-            mu, alpha, beta  = tf.split(y_hat, 2, axis=-1)
+        if "generalized" == self.loss_type:
+            mu, alpha, beta  = tf.split(pred, 3, axis=-1)
+            beta = 1.0 + beta
             loss = self.loss_function(mu, y, alpha, beta)
+            var = (alpha**2 * tf.exp(tf.math.lgamma(3/beta)))/(tf.exp(tf.math.lgamma(1/beta))) 
         else:
-            mu, var = tf.split(y_hat, 2, axis=-1)
+            mu, var = tf.split(pred, 2, axis=-1)
             loss = self.loss_function(mu, y, var)
 
         rmse = edl.losses.RMSE(y, mu)
@@ -202,7 +207,9 @@ class Likelihood:
                 nll += np.log(y_scale[0,0])
                 rmse *= y_scale[0,0]
 
-                self.save_val_summary(vloss, x_test_batch, y_test_batch, mu, var)
+                if self.save_dir:
+
+                    self.save_val_summary(vloss, x_test_batch, y_test_batch, mu, var)
 
                 if rmse.numpy() < self.min_rmse:
                     self.min_rmse = rmse.numpy()

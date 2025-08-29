@@ -8,7 +8,8 @@ def create(
     num_layers=1,
     activation=tf.nn.relu,
     num_ensembles=5,
-    sigma=True
+    sigma=True,
+    loss_name="gaussian"
     ):
 
     options = locals().copy()
@@ -18,7 +19,11 @@ def create(
         x = inputs
         for _ in range(num_layers):
             x = tf.keras.layers.Dense(num_neurons, activation=activation)(x)
-        output = edl.layers.DenseNormal(1)(x)
+
+        if "generalized" == loss_name:
+            output = edl.layers.DenseGeneral(1)(x)
+        else:
+            output = edl.layers.DenseNormal(1)(x)
         model = tf.keras.Model(inputs=inputs, outputs=output)
         return model
 

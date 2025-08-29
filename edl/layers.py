@@ -23,6 +23,27 @@ class DenseNormal(Layer):
         base_config['units'] = self.units
         return base_config
 
+class DenseGeneral(Layer):
+    def __init__(self, units):
+        super(DenseGeneral, self).__init__()
+        self.units = int(units)
+        self.dense = Dense(3 * self.units)
+
+    def call(self, x):
+        output = self.dense(x)
+        mu, alpha, beta = tf.split(output, 3, axis=-1)
+        alpha = tf.nn.softplus(alpha) + 1e-6
+        beta = tf.nn.softplus(beta) + 1e-6
+        return tf.concat([mu, alpha, beta], axis=-1)
+
+    def compute_output_shape(self, input_shape):
+        return (input_shape[0], 3*self.units)
+
+    def get_config(self):
+        base_config = super(DenseGeneral, self).get_config()
+        base_config['units'] = self.units
+        return base_config
+
 
 class DenseNormalGamma(Layer):
     def __init__(self, units):

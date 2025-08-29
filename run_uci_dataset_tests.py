@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 import seaborn as sns
 import matplotlib.pyplot as plt
+import matplotlib
 import tensorflow as tf
 import time
 from scipy import stats
@@ -16,6 +17,9 @@ import trainers
 import models
 from models.toy.h_params import h_params
 
+matplotlib.rcParams['pdf.fonttype'] = 42
+matplotlib.rcParams['ps.fonttype'] = 42
+matplotlib.rcParams['text.usetex'] = True
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--num-trials", default=20, type=int,
@@ -34,10 +38,10 @@ args = parser.parse_args()
 
 output_dir = "figs/uci"
 """" ================================================"""
-#training_schemes = [trainers.Likelihood, trainers.Likelihood, trainers.Evidential, trainers.Ensemble]
-#method_names = ["Gaussian", "Laplace", "Evidential", "Ensemble"]
-training_schemes = [trainers.Likelihood]
-method_names = ["Gaussian"]
+training_schemes = [trainers.Likelihood, trainers.Likelihood, trainers.Evidential, trainers.Ensemble, trainers.Likelihood]
+method_names = ["Gaussian", "Laplace", "Evidential", "Ensemble", "generalized"]
+#training_schemes = [trainers.Likelihood]
+#method_names = ["generalized"]
 datasets = args.datasets
 num_trials = args.num_trials
 num_epochs = args.num_epochs
@@ -79,6 +83,13 @@ def predict(method_name, model, x):
         print ("Laplace predict shape : ", mu.shape, b.shape)
         return mu, b
         
+    elif method_name == "generalized":
+        outputs = model(x, training=False)
+        mu,  alpha, beta = tf.split(outputs, 3, axis=-1)
+        beta = 1.0 + beta
+        var = (alpha**2 * tf.exp(tf.math.lgamma(3/beta)))/(tf.exp(tf.math.lgamma(1/beta))) 
+        print ("Laplace predict shape : ", mu.shape, alpha.shape)
+        return mu, tf.sqrt(var)
     
 
     else:
@@ -113,6 +124,9 @@ def compute_predictions():
                 batch_size = h_params[dataset]["batch_size"]
                 num_iterations = num_epochs * x_train.shape[0]//batch_size
                 print ("Num of iterations :", num_iterations)
+                print ("########################")
+                print (dataset, method_names[ti])
+                print ("########################")
                 done = False
                 while not done:
                     with tf.device(dev):
@@ -120,18 +134,23 @@ def compute_predictions():
                         model, opts = model_generator.create(input_shape=x_train.shape[1:])
                         if method_names[ti] == "Laplace": #training scheme is likelihood; as its 2nd in list
                             print ("Trainienr lalpace likelihood")
-                            trainer = trainer_obj(model, opts, "laplace", dataset, learning_rate=h_params[dataset]["learning_rate"])
+                            trainer = trainer_obj(model, opts, "laplace", dataset, learning_rate=h_params[dataset]["learning_rate"], save_files=False)
                         elif method_names[ti] == "Gaussian":
                             print ("Trainienr Gaussian likelihood")
-                            trainer = trainer_obj(model, opts, "gaussian", dataset, learning_rate=h_params[dataset]["learning_rate"])
+                            trainer = trainer_obj(model, opts, "gaussian", dataset, learning_rate=h_params[dataset]["learning_rate"], save_files=False)
+                        elif method_names[ti] == "generalized":
+                            print ("Trainienr Generalized likelihood")
+                            model, opts = model_generator.create(input_shape=x_train.shape[1:], loss_name=method_names[ti])
+                            trainer = trainer_obj(model, opts, "generalized", dataset, learning_rate=h_params[dataset]["learning_rate"], save_files=False)
                         else:
-                            trainer = trainer_obj(model, opts, dataset, learning_rate=h_params[dataset]["learning_rate"])
+                            trainer = trainer_obj(model, opts, dataset, learning_rate=h_params[dataset]["learning_rate"], save_files=False)
                         model, rmse, nll = trainer.train(x_train, y_train, x_test, y_test, y_scale, iters=num_iterations, batch_size=batch_size, verbose=True)
                        
                         #Compute on validation data and save predictions
                         summary_to_add = get_prediction_summary(
                              dataset, method_names[ti], model, x_test, y_test)
-                        df_pred_uci = df_pred_uci.append(summary_to_add, ignore_index=True)
+                        df_pred_uci = df_pred_uci._append(summary_to_add, ignore_index=True)
+                        df_pred_uci.to_pickle("cached_uci_results.pkl")
     
                         del model
                         tf.keras.backend.clear_session()
@@ -186,9 +205,9 @@ def gen_paper_plots(df_pred_uci):
         ax = fig.add_subplot(gs[0,i])
          
         g = sns.pointplot(x="Method", y="Interval Score", hue="Method", 
-                          markers=["o", "x", "*", "D"],
-                          linestyles=["-","--","-.",":"],
-                           data=df_pred_uci[df_pred_uci.Dataset == dataset_name], legend=False)
+                          markers=["o", "x", "*", "D", ">"],
+                          linestyles=":",
+                           data=df_pred_uci[df_pred_uci.Dataset == dataset_name])
         #g.set(yscale="log")
         g.get_legend().remove()
         g.set_xlabel(new_dataset_names[i], fontsize='xx-small')
@@ -212,9 +231,9 @@ def gen_paper_plots(df_pred_uci):
         ax = fig.add_subplot(gs[0,i])
          
         g = sns.pointplot(x="Method", y="RMSE", hue="Method", 
-                          markers=["o", "x", "*", "D"],
-                          linestyles=["-","--","-.",":"],
-                           data=df_pred_uci[df_pred_uci.Dataset == dataset_name], legend=False)
+                          markers=["o", "x", "*", "D", ">"],
+                          linestyles=":",
+                           data=df_pred_uci[df_pred_uci.Dataset == dataset_name])
         g.get_legend().remove()
         g.set_xlabel(new_dataset_names[i], fontsize='xx-small')
         g.axes.get_xaxis().set_ticks([])
@@ -232,7 +251,7 @@ def simplified_paper_plot(df_pred_uci):
     sns.set()
     sns.set_style("white")
     sns.set_style("ticks")
-    sns.despine()
+    sns.despine(trim=True)
     sns.set_context("paper")
     sns.color_palette("tab10")
 
@@ -242,6 +261,10 @@ def simplified_paper_plot(df_pred_uci):
     new_dataset_names = [label.replace('-', '-\n') for label in dataset_names]
     print (new_dataset_names, dataset_names)
 
+    #Sorting makes geenralized in between when plotting we want it in the end 
+    df_pred_uci['Method'] = df_pred_uci['Method'].str.replace('generalized', 'xeneralized')
+    df_pred_uci.sort_values(by=['Method'], inplace=True)
+    df_pred_uci['Method'] = df_pred_uci['Method'].str.replace('xeneralized', 'Generalized')
 
     #================================================
     print (f"Generating Interval Score")
@@ -261,30 +284,31 @@ def simplified_paper_plot(df_pred_uci):
     df_pred_uci["RMSE"] = (df_pred_uci["Mu"] - df_pred_uci["Target"])**2
     
     g = sns.pointplot(x="Dataset", y="RMSE", hue="Method", 
-                      markers=["*","D","o", "x" ],
-                      linestyles=["-","--","-.",":"],
+                      markers=["o", "x", "*", "D", ">"],
+                      linestyles="none",
                       dodge=0.45,
-                      join=False, ci='sd',palette=["C2", "C3", "C0", "C1"],
-                       data=df_pred_uci, legend=False)
+                      errorbar='sd',
+                       data=df_pred_uci)
     g.set_xticklabels([])
     g.get_legend().remove()
     # Improve the legend 
     handles, labels = g.get_legend_handles_labels()
-    print (labels)
-    fig.legend(handles, labels, bbox_to_anchor=(0.5, 0.85), loc='lower center', ncol=4, fancybox=True, shadow=True)
+    print ("Labels : ", labels)
+    fig.legend(handles, labels, bbox_to_anchor=(0.55, 0.92), loc='lower center', ncol=5, fancybox=True, shadow=True,
+                fontsize='x-small')
 
     ax = fig.add_subplot(gs[1,0])
     g = sns.pointplot(x="Dataset", y="Interval Score", hue="Method", 
-                      markers=["*","D","o", "x" ],
-                      linestyles=["-","--","-.",":"],
+                      markers=["o", "x", "*", "D", ">"],
+                      linestyles="none",
                       dodge=0.45,
-                      join=False, ci='sd',palette=["C2", "C3", "C0", "C1"],
-                       data=df_pred_uci, legend=False)
+                      errorbar='sd',
+                       data=df_pred_uci)
     g.set(yscale="log")
     g.get_legend().remove()
     g.set_xticklabels(new_dataset_names, fontsize='x-small')
-    plt.savefig(os.path.join(output_dir, "RMSE_IS_Comb_point_uci.pdf"))
-    plt.show()
+    plt.savefig(os.path.join(output_dir, "RMSE_IS_Comb_point_uci.pdf"), bbox_inches='tight')
+    plt.clf()
 
 def gen_plots(df_pred_uci):
     

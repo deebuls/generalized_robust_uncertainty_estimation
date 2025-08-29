@@ -3,6 +3,7 @@ import pandas as pd
 import seaborn as sns
 import argparse
 import matplotlib.pyplot as plt
+import matplotlib
 import random
 import tensorflow as tf
 import tensorflow_probability as tfp
@@ -15,6 +16,9 @@ import data_loader
 import trainers
 import models
 
+matplotlib.rcParams['pdf.fonttype'] = 42
+matplotlib.rcParams['ps.fonttype'] = 42
+matplotlib.rcParams['text.usetex'] = True
 
 parser = argparse.ArgumentParser()
 
@@ -149,6 +153,15 @@ def plot_laplace(model, x_test, save="laplace", ext=".pdf"):
     mu, b = tf.split(preds, 2, axis=-1)
     plot_scatter_with_var(mu, 1.5*b, path=save+experiment_name+ext, n_stds=3) #1normal_sigma = 1.5lapalce b
     return mu, b
+
+def plot_generalized(model, x_test, save="generalized", ext=".pdf"):
+    x_test_input = tf.convert_to_tensor(x_test, tf.float32)
+    preds = model(x_test_input, training=False) #forward pass
+    mu, alpha, beta = tf.split(preds, 3, axis=-1)
+    beta = 1.0 + beta
+    var = (alpha**2 * tf.exp(tf.math.lgamma(3/beta)))/(tf.exp(tf.math.lgamma(1/beta))) 
+    plot_scatter_with_var(mu, var**0.5, path=save+experiment_name+ext, n_stds=3)
+    return mu, var**0.5
 '''=========================================================================
 def plot_laplace_likelihood_ensemble(models, x_test, save="laplace_ensemble", ext=".pdf"):
     x_test_input = tf.convert_to_tensor(x_test, tf.float32)
@@ -250,6 +263,15 @@ def gaussian_4_layers_100_neurons(x_train, y_train, x_test): #This function will
     print (x_train.shape)
     model, rmse, nll = trainer.train(x_train, y_train, x_train, y_train, np.array([[1.]]), iters=iterations, batch_size=batch_size, verbose=True)
     return plot_gaussian(model, x_test, os.path.join(save_fig_dir,"gaussian_4_layers_100_neurons"))
+
+def generalized_4_layers_100_neurons(x_train, y_train, x_test): #This function will not work because trainer chagnes
+    trainer_obj = trainers.Likelihood
+    model_generator = models.get_correct_model(dataset="toy", trainer=trainer_obj)
+    model, opts = model_generator.create(input_shape=(1,), num_neurons=100, num_layers=5, loss_name="generalized")
+    trainer = trainer_obj(model, opts, "generalized", dataset="toy",learning_rate=5e-3, save_files=True)
+    print (x_train.shape)
+    model, rmse, nll = trainer.train(x_train, y_train, x_train, y_train, np.array([[1.]]), iters=iterations, batch_size=batch_size, verbose=True)
+    return plot_generalized(model, x_test, os.path.join(save_fig_dir,"gaussian_4_layers_100_neurons"))
 '''    
 def gaussian_4_layers_100_neurons():
     trainer_obj = trainers.Gaussian
@@ -300,8 +322,9 @@ def emperical_breakaway_point():
     function_names = [ensemble_4_layers_100_neurons, 
                       gaussian_4_layers_100_neurons, 
                       evidence_reg_4_layers_100_neurons,
-                      laplace_4_layers_100_neurons]
-    method_names = ['Ensemble','Gaussian','Evidential','Laplace']
+                      laplace_4_layers_100_neurons,
+                      generalized_4_layers_100_neurons]
+    method_names = ['Ensemble','Gaussian','Evidential','Laplace', 'Generalized']
 
     df_pred = pd.DataFrame(columns=["Method", "noise", "RMSE", "Interval Score", "X", "Y", "Mu", "Sigma", "GT_Sigma"])
     for j in range(1):
@@ -330,8 +353,9 @@ def emperical_breakaway_point():
                 summary = [{"run":j,"Method":method_name, "noise":noise, "RMSE":r, "Interval Score":i ,
                             "X":x, "Y":y, "Mu":m, "Sigma":s, "GT_Sigma":st} for r,i,x,y,m,s,st in zip(rmse, interval_score, x_test, y_test, mu, sigma, sigma_train)]
                 df_pred = df_pred._append(summary, ignore_index=True)
+                df_pred.to_pickle(os.path.join(save_fig_dir, "cached_toy_results.pkl"))
 
-                print (df_pred.head())
+                print (df_pred.tail())
                 tf.keras.backend.clear_session()
 
     return df_pred
@@ -355,12 +379,13 @@ def plot_breakaway_point(df_pred):
 
     #Removing Dropout
     df_pred = df_pred[df_pred.Method != "Dropout"]
+    print ("Unique methods :", df_pred['Method'].unique())
     fig = plt.figure(figsize=(14.2*cm, 14.2*cm/2.0))
     gs = fig.add_gridspec(1, 2)
     ax1 = fig.add_subplot(gs[0, 0])
     g = sns.pointplot(x="Noise %", y="RMSE", hue="Method", 
-                      markers=["o", "x", "*", "D"],
-                      linestyles=["-","--","-.",":"],
+                      markers=["o", "x", "*", "D", ">"],
+                      linestyles=":",
                        data=df_pred)
     #g.legend(bbox_to_anchor=(0.8, 1.2 ), loc='upper center', ncol=5, fontsize=5, fancybox=True, shadow=True) 
     g.get_legend().remove()
@@ -374,8 +399,8 @@ def plot_breakaway_point(df_pred):
     #g.set_aspect(1.5)
     ax = fig.add_subplot(gs[0, 1])
     g = sns.pointplot(x="Noise %", y="Interval Score", hue="Method", 
-                      markers=["o", "x", "*", "D"],
-                      linestyles=["-","--","-.",":"],
+                      markers=["o", "x", "*", "D", ">"],
+                      linestyles=":",
                        data=df_pred)
     g.set(yscale="log")
     # manipulate x tick labels to add percentage
