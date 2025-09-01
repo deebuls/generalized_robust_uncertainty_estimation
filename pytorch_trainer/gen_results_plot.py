@@ -7,9 +7,12 @@ import os
 import pandas as pd
 from pathlib import Path
 import seaborn as sns
+
 import scipy.stats
-import models
+from scipy.stats import norm, laplace, gennorm
+
 import torch
+import models
 from torch.utils.data import Dataset, DataLoader
 import albumentations as A
 from dataset import KeypointDataset
@@ -77,10 +80,6 @@ def compute_predictions(batch_size=32, n_adv=9):
     # dataloader for OOD data
     ood_dataloader = DataLoader(ood_dataset, batch_size=32, shuffle=True)
 
-    df_pred_image = pd.DataFrame(
-            columns=["Method", "Model_path", "Input", 
-                "Keypoint", "Mu", "Var", "Beta", "Adv. Mask", "Epsilon", "OOD"])
-
     adv_eps = np.linspace(0, 0.04, n_adv)
     all_summaries = []
     for method, model_path_list in trained_models.items():
@@ -88,6 +87,8 @@ def compute_predictions(batch_size=32, n_adv=9):
             full_path = os.path.join(save_dir, model_path)
             model = load_model(method, full_path)
             batch_summary = get_prediction_summary(model, dataloader, device, method, model_path)
+            all_summaries.extend(batch_summary)
+            batch_summary = get_prediction_summary(model, ood_dataloader, device, method, model_path, ood=True)
             all_summaries.extend(batch_summary)
 
     df_pred_image = pd.DataFrame(all_summaries)
@@ -202,7 +203,7 @@ def gen_interval_score_plot(df_image):
     print(f"Generating Interval score")
     df_pixel = df_image[(df_image["OOD"]==False) & ((df_image["Epsilon"]==0.0) | (df_image["Epsilon"]==0.02) | (df_image["Epsilon"]==0.04))]
 
-    df_pixel = df_pixel[['Method', 'Keypoint', 'Mu', 'Var', 'Beta']]
+    df_pixel = df_pixel[['Method', 'Epsilon', 'Keypoint', 'Mu', 'Var', 'Beta']]
     df_pixel = df_pixel.explode(['Keypoint', 'Mu', 'Var', 'Beta'])
     df_pixel = df_pixel.astype({"Keypoint": float, "Mu": float, "Var": float, "Beta": float})
 
@@ -220,20 +221,164 @@ def gen_interval_score_plot(df_image):
     plt.show()
 
     print (f"Generating Interval Score")
-    df_pixel["lower"] = df_pixel["Mu"] - 2*df_pixel["Sigma"]
-    df_pixel["lower"].mask(df_pixel["Method"]=="Laplace", df_pixel["Mu"] - 3*df_pixel["Sigma"], inplace=True)
-    df_pixel["upper"] = df_pixel["Mu"] + 2*df_pixel["Sigma"]
-    df_pixel["upper"].mask(df_pixel["Method"]=="Laplace", df_pixel["Mu"] + 3*df_pixel["Sigma"], inplace=True)
+
+    # Calculate the 95% interval regions
+    # This corresponds to the 2.5th and 97.5th percentiles of the distributions.
+    lower_percentile = 0.025
+    upper_percentile = 0.975
+
+    df_pixel["lower"] = df_pixel['Var']
+    df_pixel["lower"].mask(df_pixel["Method"]=="Gaussian", 
+            norm.ppf(lower_percentile , loc=df_pixel['Mu'], scale=np.sqrt(df_pixel['Var'])))
+    df_pixel["lower"].mask(df_pixel["Method"]=="Laplace", 
+            laplace.ppf(lower_percentile , loc=df_pixel['Mu'], scale=df_pixel['Var']))
+    df_pixel["lower"].mask(df_pixel["Method"]=="Laplace", 
+            gennorm.ppf(lower_percentile , loc=df_pixel['Mu'], scale=df_pixel['Var'], beta=df_pixel['Beta']))
+
+    df_pixel["upper"] = df_pixel['Var']
+    df_pixel["upper"].mask(df_pixel["Method"]=="Gaussian", 
+            norm.ppf(upper_percentile , loc=df_pixel['Mu'], scale=np.sqrt(df_pixel['Var'])))
+    df_pixel["upper"].mask(df_pixel["Method"]=="Laplace", 
+            laplace.ppf(upper_percentile , loc=df_pixel['Mu'], scale=df_pixel['Var']))
+    df_pixel["upper"].mask(df_pixel["Method"]=="Laplace", 
+            gennorm.ppf(upper_percentile , loc=df_pixel['Mu'], scale=df_pixel['Var'], beta=df_pixel['Beta']))
     
     df_pixel["Interval Score"] = df_pixel["upper"] - df_pixel["lower"] \
-     + (2/0.95)*(df_pixel["lower"]-df_pixel["Target"])*(df_pixel["Target"]<df_pixel["lower"]) \
-     + (2/0.95)*(df_pixel["Target"] - df_pixel["upper"])*(df_pixel["Target"]>df_pixel["upper"])
+     + (2/0.95)*(df_pixel["lower"]-df_pixel["Keypoint"])*(df_pixel["Keypoint"]<df_pixel["lower"]) \
+     + (2/0.95)*(df_pixel["Keypoint"] - df_pixel["upper"])*(df_pixel["Keypoint"]>df_pixel["upper"])
     
     g = sns.catplot(x="Epsilon", y="Interval Score", hue="Method", data=df_pixel, kind="box", whis=0.5, showfliers=False)
-    g.set(yscale="log")
+    #g.set(yscale="log")
     plt.savefig(os.path.join(output_dir, f"Interval_score_Adv_box_Keypoint.pdf"))
     plt.show()
  
+def gen_ood_comparison(df_image, unc_key="Entropy"):
+    print(f"Generating OOD plots with unc_key={unc_key}")
+
+    df_pixel = df_image[df_image["Epsilon"]==0.0] # Remove adversarial noise experiments
+    df_pixel = df_pixel[['Method', 'Model Path', 'OOD', 'Keypoint', 'Mu', 'Var', 'Beta']]
+    df_pixel = df_pixel.explode(['Keypoint', 'Mu', 'Var', 'Beta'])
+    df_pixel = df_pixel.astype({"Keypoint": float, "Mu": float, "Var": float, "Beta": float})
+
+    print ("sigma inf count :",np.sum(np.isinf(df_pixel['Var'])))
+    #inf_id = df_pixel[df_pixel.isin([np.nan, np.inf, -np.inf]).any(1)]
+    #print (inf_id.head())
+    df_pixel["Entropy"] = 0.5*np.log(2*np.pi*np.exp(1.)*(df_pixel["Var"]))
+    print ("Entropy inf count :",np.sum(np.isinf(df_pixel['Entropy'])))
+    df_pixel["Entropy"].mask(df_pixel["Method"]=="Gaussian", norm.entropy(loc=df_pixel["Mu"], scale=np.sqrt(df_pixel["Var"])) ) #  entropy for laplace distirbution
+    df_pixel["Entropy"].mask(df_pixel["Method"]=="Laplace",  laplace.entropy(loc=df_pixel["Mu"], scale=df_pixel["Var"]) ) #  entropy for laplace distirbution
+    df_pixel["Entropy"].mask(df_pixel["Method"]=="Generalized",  gennorm.entropy(loc=df_pixel["Mu"], scale=df_pixel["Var"], beta=df_pixel["Beta"]) ) #  entropy for laplace distirbution
+
+    df_by_method = df_pixel.groupby(["Method","Model Path", "OOD"])
+    df_by_image = df_pixel.groupby([df_pixel.index, "Method","Model Path", "OOD"])
+
+    df_mean_unc = df_by_method[unc_key].mean().reset_index() #mean of all pixels per method
+    df_mean_unc_img = df_by_image[unc_key].mean().reset_index() #mean of all pixels in every method and image
+
+
+    ### Grab some sample images of most and least uncertainty
+    #for method in df_mean_unc_img["Method"].unique():
+    #    imgs_max = dict()
+    #    imgs_min = dict()
+    #    for ood in df_mean_unc_img["OOD"].unique():
+    #        df_subset = df_mean_unc_img[
+    #            (df_mean_unc_img["Method"]==method) &
+    #            (df_mean_unc_img["OOD"]==ood)]
+    #        if len(df_subset) == 0:
+    #            continue
+    #        def get_imgs_from_idx(idx):
+    #            i_img = df_subset.loc[idx]["level_0"]
+    #            img_data = df_image.loc[i_img]
+    #            sigma = np.array(img_data["Sigma"])
+    #            entropy = np.log(sigma**2)
+
+    #            ret = [img_data["Input"], img_data["Mu"], entropy, img_data["Target"]]
+    #            return list(map(trim, ret))
+
+    #        def idxquantile(s, q=0.5, *args, **kwargs):
+    #            qv = s.quantile(q, *args, **kwargs)
+    #            return (s.sort_values()[::-1] <= qv).idxmax()
+
+    #        imgs_max[ood] = get_imgs_from_idx(idx=idxquantile(df_subset["Entropy"], 0.95))
+    #        imgs_min[ood] = get_imgs_from_idx(idx=idxquantile(df_subset["Entropy"], 0.05))
+
+    #    all_entropy_imgs = np.array([ [d[ood][2] for ood in d.keys()] for d in (imgs_max, imgs_min)])
+    #    entropy_bounds = (all_entropy_imgs.min(), all_entropy_imgs.max())
+
+    #    Path(os.path.join(output_dir, "images")).mkdir(parents=True, exist_ok=True)
+    #    for d in (imgs_max, imgs_min):
+    #        for ood, (x, y, entropy, target) in d.items():
+    #            id = os.path.join(output_dir, f"images/ood_{ood}_method_{method}_entropy_{entropy.mean()}")
+    #            cv2.imwrite(f"{id}_0.png", 255*x)
+    #            cv2.imwrite(f"{id}_mu.png", apply_cmap(y, cmap=cv2.COLORMAP_JET))
+    #            cv2.imwrite(f"{id}_target.png", apply_cmap(target, cmap=cv2.COLORMAP_JET))
+    #            entropy = (entropy - entropy_bounds[0]) / (entropy_bounds[1]-entropy_bounds[0])
+    #            cv2.imwrite(f"{id}_unc.png", apply_cmap(entropy))
+
+    #cm = 1/2.54  # centimeters in inches
+    #sns.catplot(x="Method", y=unc_key, hue="OOD", data=df_mean_unc_img, kind="violin")
+    #plt.savefig(os.path.join(output_dir, f"ood_{unc_key}_violin.pdf"))
+    #plt.show()
+
+    cm = 1/2.54  # centimeters in inches
+    fig = plt.figure(figsize=(14.2*cm/2.0,14.2*cm/2.0))
+    #sns.catplot(x="Method", y=unc_key, hue="OOD", data=df_mean_unc_img, kind="box", whis=0.5, showfliers=False)
+    g = sns.boxplot(x="Method", y=unc_key, hue="OOD", data=df_mean_unc_img, whis=0.5, showfliers=False)
+    g.get_legend().remove()
+    handles, labels = g.get_legend_handles_labels()
+    print ("OOD Labels ", labels)
+    plt.legend(handles, ['ID','OOD'], bbox_to_anchor=(0.01, 0.99), loc='upper left', ncol=1)
+    plt.savefig(os.path.join(output_dir, f"ood_{unc_key}_box.pdf"), bbox_inches='tight')
+    plt.show()
+
+
+    ### Plot PDF for each Method on both OOD and IN
+    cm = 1/2.54  # centimeters in inches
+    g = sns.FacetGrid(df_mean_unc_img, col="Method", hue="OOD", height=14.2*cm/2.0, aspect=0.8, legend_out=False)
+    g.map(sns.distplot, "Entropy")#.add_legend()
+    g.axes[0][2].legend()
+    plt.legend(['ID','OOD'], fontsize='small')
+    plt.savefig(os.path.join(output_dir, f"ood_{unc_key}_pdf_per_method.pdf"), bbox_inches='tight')
+    plt.show()
+
+    exit()
+    ## FIX BEELOW
+    ### Plot CDFs for every method on both OOD and IN
+    df_cumdf = list()
+    unc_ = np.linspace(df_mean_unc_img[unc_key].min(), df_mean_unc_img[unc_key].max(), 200)
+
+    for method in df_mean_unc_img["Method"].unique():
+        for model_path in df_mean_unc_img["Model Path"].unique():
+            for ood in df_mean_unc_img["OOD"].unique():
+                df = df_mean_unc_img[
+                    (df_mean_unc_img["Method"]==method) &
+                    (df_mean_unc_img["Model Path"]==model_path) &
+                    (df_mean_unc_img["OOD"]==ood)]
+                if len(df) == 0:
+                    continue
+                unc = np.sort(df[unc_key])
+                prob = np.linspace(0,1,unc.shape[0])
+                f_cdf = scipy.interpolate.interp1d(unc, prob, fill_value=(0.,1.), bounds_error=False)
+                prob_ = f_cdf(unc_)
+
+                df_single = {'Method': method, 'Model Path': model_path,
+                    'OOD': ood, unc_key: unc_, 'CDF': prob_}
+                df_cumdf.append(df_single)
+
+    df_cumdf = pd.DataFrame(df_cumdf)
+    df_cumdf = df_cumdf.explode(['CDF'])
+    print (df_cumdf)
+    cm = 1/2.54  # centimeters in inches
+    plt.figure(figsize=(14.2*cm/2.0,14.2*cm/2.0))
+    g = sns.lineplot(data=df_cumdf, x=unc_key, y="CDF", hue="Method", style="OOD")
+    handles, labels = g.get_legend_handles_labels()
+    print ("OOD Labels ", labels)
+    labels[-2] = 'ID';labels[-1] = 'OOD';
+    print ("OOD Labels ", labels)
+    plt.legend( handles, labels, fontsize='x-small')
+    plt.savefig(os.path.join(output_dir, f"ood_{unc_key}_cdfs.pdf"), bbox_inches='tight')
+    plt.show()
+
 if args.load_pkl:
     print("Loading!")
     df_image = pd.read_pickle("cached_keypoint_results.pkl")
@@ -242,5 +387,7 @@ else:
     df_image.to_pickle("cached_keypoint_results.pkl")
 
 
-gen_calibration_plot(df_image)
+#gen_calibration_plot(df_image)
+#gen_interval_score_plot(df_image)
+gen_ood_comparison(df_image)
             
