@@ -36,12 +36,13 @@ class KeypointResnetModel(nn.Module):
     def freeze_for_uncertainty(self):
         for param in self.parameters():
             param.requires_grad = False
-
-        for param in self.variance.parameters():
-            param.requires_grad = True
-
         if self.additional_output:
+            # For Generalized unfreeze only beta
             for param in self.beta.parameters():
+                param.requires_grad = True
+        else:
+            # For Gaussian, normal unfreeze variance
+            for param in self.variance.parameters():
                 param.requires_grad = True
 
     def unfreeze(self):

@@ -101,16 +101,8 @@ def train_model(loss_function, note, with_outliers=False):
     # Pass only the trainable parameters to the optimizer
     # Learning rate scheduler
     scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=10, verbose=True)
-    print ("Freezed only output for first run ")
-    model.freeze_for_uncertainty()
-    optimizer.param_groups.clear()
-    optimizer.state.clear()
-    # Get all parameters that are trainable
-    all_trainable_params = [p for p in model.parameters() if p.requires_grad]
-    optimizer.add_param_group({'params' : all_trainable_params})
-
     # Training loop
-    for epoch in range(1, num_epochs):
+    for epoch in range(0, num_epochs):
         model.train()
         running_loss = 0.0
         if (epoch % 20) == 0:
@@ -123,8 +115,8 @@ def train_model(loss_function, note, with_outliers=False):
             all_trainable_params = [p for p in model.parameters() if p.requires_grad]
             optimizer.add_param_group({'params' : all_trainable_params})
 
-        if ((epoch % 21) == 0 ) or (epoch == 2) :
-            print (f"{epoch}UnFreezed ")
+        if ((epoch % 21) == 0 ) or (epoch == 1) :
+            print (f"{epoch} UnFreezed ")
             model.unfreeze()
             optimizer.param_groups.clear()
             optimizer.state.clear()
