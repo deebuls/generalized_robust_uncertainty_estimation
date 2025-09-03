@@ -86,7 +86,9 @@ def compute_predictions(batch_size=32, n_adv=9):
         for model_i, model_path in enumerate(model_path_list):
             full_path = os.path.join(save_dir, model_path)
             model = load_model(method, full_path)
-            batch_summary = get_prediction_summary(model, dataloader, device, method, model_path)
+            batch_summary = get_prediction_summary(model, dataloader, device,
+                                                   method, model_path,
+                                                   eps=adv_eps)
             all_summaries.extend(batch_summary)
             batch_summary = get_prediction_summary(model, ood_dataloader, device, method, model_path, ood=True)
             all_summaries.extend(batch_summary)
@@ -95,26 +97,59 @@ def compute_predictions(batch_size=32, n_adv=9):
     print (df_pred_image.head())
     return df_pred_image
        
-def get_prediction_summary(model, dataloader, device, method, model_path, eps=0.0, ood=False):
+def get_prediction_summary(model, dataloader, device, method, model_path,
+                           eps=[0.0], ood=False):
     # Set the model to evaluation mode
     model.eval()
     batch_summaries = []
     for i, (images, keypoints) in enumerate(dataloader):
         images = images.to(device)
+        images.requires_grad = True
         keypoints = keypoints.view(-1, 8)
         # Perform inference
-        with torch.no_grad():
+        for epsilon in eps:
             if method == Model.Generalized:
                 pred_mean, pred_scale, beta = model(images)
             else:
                 pred_mean, pred_scale = model(images)
                 beta = torch.ones_like(pred_scale)
-        ### Save the predictions to some dataframes for later analysis
-        summary = [{"Method": method.value, "Model Path": model_path,
-            "Input": x, "Keypoint": y, "Mu": mu, "Var": var,"Beta": beta, 
-            "Epsilon": eps, "OOD": ood}
-            for x,y,mu,var,beta in zip(images.cpu().numpy(), keypoints.numpy(), pred_mean.cpu().numpy(), pred_scale.cpu().numpy(), beta.cpu().numpy())]
-        batch_summaries.extend(summary)
+
+            loss = F.nll_loss(pred_mean, keypoints)
+            model.zero_grad()
+            loss.backward()
+            data_grad = images.grad.data
+            #denorm image 
+            #image = image_tensor.permute(1, 2, 0)
+            mean = np.array([0.485, 0.456, 0.406])
+            std = np.array([0.229, 0.224, 0.225])
+            # Convert mean and std to tensors for easy computation
+            mean_tensor = torch.tensor(mean, device=device).view(1, 3, 1, 1)
+            std_tensor = torch.tensor(std, device=device).view(1, 3, 1, 1)
+            image = image * std_tensor + mean_tensor
+            image = np.clip(image, 0, 1)
+            # Collect the element-wise sign of the data gradient
+            sign_data_grad = data_grad.sign()
+            # Create the perturbed image by adjusting each pixel of the input image
+            perturbed_image = image + epsilon*sign_data_grad
+            # Adding clipping to maintain [0,1] range
+            perturbed_image = torch.clamp(perturbed_image, 0, 1)
+            # Reapply normalization
+            perturbed_data_normalized = transforms.Normalize(mean, std)(perturbed_data)
+
+            # Re-classify the perturbed image
+            if method == Model.Generalized:
+                pred_mean, pred_scale, beta
+                = model(perturbed_data_normalized)
+            else:
+                pred_mean, pred_scale = model(perturbed_data_normalized)
+                beta = torch.ones_like(pred_scale)
+                # Return the perturbed image
+            ### Save the predictions to some dataframes for later analysis
+            summary = [{"Method": method.value, "Model Path": model_path,
+                "Input": x, "Keypoint": y, "Mu": mu, "Var": var,"Beta": beta, 
+                "Epsilon": eps, "OOD": ood}
+                for x,y,mu,var,beta in zip(images.cpu().numpy(), keypoints.numpy(), pred_mean.cpu().numpy(), pred_scale.cpu().numpy(), beta.cpu().numpy())]
+            batch_summaries.extend(summary)
     return batch_summaries
 
 def df_image_to_pixels(df, keys=["Keypoint", "Mu", "Var"]):
