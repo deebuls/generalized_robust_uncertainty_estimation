@@ -33,14 +33,15 @@ LOSS_CHOICES = ['gaussian', 'laplace', 'generalized_gaussian']
 # Assuming a simple model for demonstration
 
 # Main training script
-def train_model(loss_function, note):
+def train_model(loss_function, note, with_outliers=False):
     # Set device
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using device: {device}")
 
     #Get the current date and time
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    run_name = f"resent_{loss_function}_{IMG_SIZE}_{timestamp}"
+    run_name = f"resent_{loss_function}_{IMG_SIZE}_with_outliers_{str(with_outliers)}_{timestamp}"
+    print ("Starting run ", run_name)
     writer = SummaryWriter(log_dir=os.path.join('runs', run_name))
     
     # The note you want to add for the experiment
@@ -66,10 +67,10 @@ def train_model(loss_function, note):
          translate_px=10,  # Single scalar value for translation (pixels)
          p=1.0),
         A.ShotNoise(scale_range=(9.0, 10.0), p=0.2),
-        A.RandomGridShuffle(grid=(3, 3), p=0.3),
         A.HueSaturationValue(hue_shift_limit=20, sat_shift_limit=30, val_shift_limit=20, p=1.0),
         A.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)), # Normalize pixel values
     ], keypoint_params=A.KeypointParams(format='xy'))
+
 
 
     dataset = KeypointDataset(root_dir='./data', image_size=IMG_SIZE, transform=transform)
@@ -86,7 +87,8 @@ def train_model(loss_function, note):
     target_var = 5.0
      
     # Early stopping
-    early_stopping = EarlyStopping(patience=20, verbose=True, filename=loss_function+"_"+CHECKPOINT_PTH)
+    early_stopping = EarlyStopping(patience=20, 
+            verbose=True, filename=loss_function+"_with_outliers_"+str(with_outliers)+"_"+CHECKPOINT_PTH)
    
     if loss_function == 'gaussian':
         criterion = torch.nn.GaussianNLLLoss()
@@ -134,6 +136,8 @@ def train_model(loss_function, note):
             images = images.to(device)
             keypoints = keypoints.to(device)
             keypoints = keypoints.view(-1, 8)
+            if with_outliers:
+                keypoints = add_outliers(keypoints, 0.1) # Adding 10% outliers
 
             optimizer.zero_grad()
             if loss_function == 'generalized_gaussian':
@@ -177,9 +181,10 @@ def train_model(loss_function, note):
             print("Early stopping triggered")
             break
 
-    print("Finished Training")
+    timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    print("Finished Training ", timestamp)
     writer.close()
-    model.load_state_dict(torch.load(loss_function+"_"+CHECKPOINT_PTH, weights_only=True))
+    model.load_state_dict(torch.load(loss_function+"_with_outliers_"+str(with_outliers)+"_"+CHECKPOINT_PTH, weights_only=True))
     model.to(device)
     # Get a batch of data from the dataloader
     dataloader = DataLoader(dataset, batch_size=16, shuffle=True)
@@ -210,7 +215,7 @@ def train_model(loss_function, note):
         pred_scale.cpu(), show_contours=False
     )
 
-def load_device_model_data(test_ood: bool, loss_function: str):
+def load_device_model_data(test_ood: bool, loss_function: str, with_outliers: bool):
     # Set device
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using device: {device}")
@@ -235,13 +240,15 @@ def load_device_model_data(test_ood: bool, loss_function: str):
     else:
         model = KeypointResnetModel().to(device)
    
-    model.load_state_dict(torch.load(loss_function+"_"+CHECKPOINT_PTH, weights_only=True))
+    model.load_state_dict(torch.load(loss_function+"_with_outliers_"+str(with_outliers)+"_"+CHECKPOINT_PTH, weights_only=True))
     model.to(device)
 
     return device, model, dataloader
 
-def test_near_ood(loss_function):
-    device, model, dataloader = load_device_model_data(test_ood=True, loss_function=loss_function)
+def test_near_ood(loss_function, with_outliers):
+    device, model, dataloader = load_device_model_data(test_ood=True, 
+                                                       loss_function=loss_function,
+                                                       with_outliers=with_outliers)
     # Get a batch of data from the dataloader
     images, keypoints = next(iter(dataloader))
 
@@ -271,7 +278,29 @@ def test_near_ood(loss_function):
         images.cpu(), keypoints, pred_mean.cpu(), 
         pred_scale.cpu(), show_contours=False, figname='OOD'
     )
-        
+    
+def add_outliers(keypoint, percentage):
+    # Calculate the total number of values
+    total_elements = keypoint.numel()
+
+    # Calculate the number of values to change (10%)
+    num_to_change = int(total_elements * percentage)
+
+    # Get all possible indices
+    all_indices = torch.arange(total_elements)
+
+    # Randomly select the indices to change
+    indices_to_change = torch.randperm(total_elements)[:num_to_change]
+
+    # Create a new tensor with the same shape as keypoint
+    # This makes sure the new values are in the same range as the old ones
+    random_data = torch.randn_like(keypoint.flatten())
+
+    # Use the selected indices to replace values in the original tensor
+    keypoint.flatten()[indices_to_change] = random_data[indices_to_change]
+    
+    return keypoint
+
 def test_adversarial_attack(loss_function):
     device, model, dataloader = load_device_model_data(test_ood=False)
     epsilons = [0, .05, .1, .15, .2, .25, .3]
@@ -291,12 +320,15 @@ if __name__ == '__main__':
     parser.add_argument("--only_test", help="dont train only OOD")
     parser.add_argument("-n", "--note", type=str,
                     help="note for training")
+    parser.add_argument("--with_outliers", type=bool, help="train with outliers OOD")
     args = parser.parse_args()
 
     if not args.only_test:
-        train_model(loss_function=args.loss, note=args.note)
+        train_model(loss_function=args.loss, 
+                note=args.note, 
+                with_outliers=args.with_outliers)
 
     torch.cuda.empty_cache() 
-    test_near_ood(loss_function=args.loss)
+    test_near_ood(loss_function=args.loss, with_outliers=args.with_outliers)
     #test_adversarial_attack(loss_function=args.loss)
     torch.cuda.empty_cache() 
