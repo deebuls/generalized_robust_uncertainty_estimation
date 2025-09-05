@@ -66,26 +66,31 @@ def train_model(loss_function, note, with_outliers=False):
          rotate=15,  # Single scalar value for rotation (degrees)
          translate_px=10,  # Single scalar value for translation (pixels)
          p=1.0),
-        A.ShotNoise(scale_range=(9.0, 10.0), p=0.2),
+        A.ShotNoise(scale_range=(9.0, 10.0), p=0.1),
         A.HueSaturationValue(hue_shift_limit=20, sat_shift_limit=30, val_shift_limit=20, p=1.0),
+         A.RandomGridShuffle(grid=(3, 3), p=1.0),
+        A.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)), # Normalize pixel values
+    ], keypoint_params=A.KeypointParams(format='xy'))
+
+    val_transform = A.Compose([
+        A.Resize(IMG_SIZE, IMG_SIZE),  # Resize to a fixed size
         A.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)), # Normalize pixel values
     ], keypoint_params=A.KeypointParams(format='xy'))
 
 
-
     dataset = KeypointDataset(root_dir='./data', image_size=IMG_SIZE, transform=transform)
+    val_dataset = KeypointDataset(root_dir='./data', image_size=IMG_SIZE, transform=val_transform)
     dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
-    
+    val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=True)
+   
+    print (" len dataset ", len(val_dataset))
+    print (" len Dalaloader  ", len(val_dataloader))
     # Model, loss function, and optimizer
     if loss_function == 'generalized_gaussian':
         model = KeypointResnetModel(additional_output=True).to(device)
     else:
         model = KeypointResnetModel().to(device)
    
-    criterion_mse = torch.nn.MSELoss()
-    optimizer_mse = torch.optim.Adam(model.parameters(), lr=learning_rate)
-    target_var = 5.0
-     
     # Early stopping
     early_stopping = EarlyStopping(patience=20, 
             verbose=True, filename=loss_function+"_with_outliers_"+str(with_outliers)+"_"+CHECKPOINT_PTH)
@@ -101,23 +106,25 @@ def train_model(loss_function, note, with_outliers=False):
     # Pass only the trainable parameters to the optimizer
     # Learning rate scheduler
     scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=10, verbose=True)
+
     # Training loop
     for epoch in range(0, num_epochs):
         model.train()
         running_loss = 0.0
-        if (epoch % 20) == 0:
-            #Pause the learning of output layer to train uncertainty
-            print ("Freezed only output ")
-            model.freeze_for_uncertainty()
+        running_rmse = 0.0
+        if ((epoch % 21) == 0 ) or (epoch == 1) :
+            print (f"{epoch}UnFreezed ")
+            model.unfreeze()
             optimizer.param_groups.clear()
             optimizer.state.clear()
             # Get all parameters that are trainable
             all_trainable_params = [p for p in model.parameters() if p.requires_grad]
             optimizer.add_param_group({'params' : all_trainable_params})
 
-        if ((epoch % 21) == 0 ) or (epoch == 1) :
-            print (f"{epoch} UnFreezed ")
-            model.unfreeze()
+        if (epoch % 20) == 0:
+            #Pause the learning of output layer to train uncertainty
+            print ("Freezed only output ")
+            model.freeze_for_uncertainty()
             optimizer.param_groups.clear()
             optimizer.state.clear()
             # Get all parameters that are trainable
@@ -129,7 +136,7 @@ def train_model(loss_function, note, with_outliers=False):
             keypoints = keypoints.to(device)
             keypoints = keypoints.view(-1, 8)
             if with_outliers:
-                keypoints = add_outliers(keypoints, 0.1) # Adding 10% outliers
+                keypoints = add_outliers(keypoints, 0.05) # Adding 10% outliers
 
             optimizer.zero_grad()
             if loss_function == 'generalized_gaussian':
@@ -145,6 +152,7 @@ def train_model(loss_function, note, with_outliers=False):
             
             # Calculate RMSE
             rmse = torch.sqrt(torch.mean((pred_mean - keypoints) ** 2))
+            running_rmse += rmse.item() * images.size(0)
             # Calculate the mean of the predicted variances
             mean_variance = torch.mean(pred_scale)
             max_variance = torch.max(pred_scale)
@@ -162,13 +170,30 @@ def train_model(loss_function, note, with_outliers=False):
                 writer.add_scalar('Metrics/Max Beta', max_variance.item(), global_step)
 
         epoch_loss = running_loss / len(dataset)
-        print(f"Epoch [{epoch+1}/{num_epochs}], Loss: {epoch_loss:.4f}")
+        epoch_rmse = running_rmse / len(dataset)
+        print(f"Epoch [{epoch+1}/{num_epochs}], Loss: {epoch_loss:.4f}, RMSE: {epoch_rmse:.4f}")
 
         # Update learning rate based on validation loss
         scheduler.step(epoch_loss)
 
         # Check for early stopping
         early_stopping(epoch_loss, model)
+
+        if ((epoch % 10) == 0 ) :
+            val_data(val_dataloader, model, epoch, writer, device, loss_function, len(dataset))
+
+        if early_stopping.train_uncertainty:
+            model.load_state_dict(torch.load(loss_function+"_with_outliers_"+str(with_outliers)+"_"+CHECKPOINT_PTH, weights_only=True))
+            model.to(device)
+            print("Early stopping triggered training uncertainty ")
+            print ("Freezed only output ")
+            model.freeze_for_uncertainty()
+            optimizer.param_groups.clear()
+            optimizer.state.clear()
+            # Get all parameters that are trainable
+            all_trainable_params = [p for p in model.parameters() if p.requires_grad]
+            optimizer.add_param_group({'params' : all_trainable_params})
+
         if early_stopping.early_stop:
             print("Early stopping triggered")
             break
@@ -178,6 +203,8 @@ def train_model(loss_function, note, with_outliers=False):
     writer.close()
     model.load_state_dict(torch.load(loss_function+"_with_outliers_"+str(with_outliers)+"_"+CHECKPOINT_PTH, weights_only=True))
     model.to(device)
+
+
     # Get a batch of data from the dataloader
     dataloader = DataLoader(dataset, batch_size=16, shuffle=True)
     images, keypoints = next(iter(dataloader))
@@ -185,6 +212,7 @@ def train_model(loss_function, note, with_outliers=False):
     # Set the model to evaluation mode
     model.eval()
 
+    val_data(val_dataloader, model, epoch, writer, device, loss_function, len(dataset))
     # Perform inference
     with torch.no_grad():
         images = images.to(device)
@@ -207,6 +235,33 @@ def train_model(loss_function, note, with_outliers=False):
         pred_scale.cpu(), show_contours=False
     )
 
+def val_data(dataloader, model, epoch, writer, device, loss_function, len_dataset):
+    # Set the model to evaluation mode
+    model.eval()
+    running_rmse = 0
+    for i, (images, keypoints) in enumerate(dataloader):
+        images = images.to(device)
+        keypoints = keypoints.to(device)
+        keypoints = keypoints.view(-1, 8)
+
+        with torch.no_grad():
+            if loss_function == 'generalized_gaussian':
+                pred_mean, pred_scale, pred_beta = model(images)
+            else:
+                pred_mean, pred_scale = model(images)
+        
+            # Calculate RMSE
+            rmse = torch.sqrt(torch.mean((pred_mean - keypoints) ** 2))
+            running_rmse += rmse.item() * images.size(0)
+
+            # Log loss to TensorBoard
+            global_step = epoch * len(dataloader) + i
+            writer.add_scalar('Metrics/val_RMSE', rmse.item(), global_step)
+
+    epoch_rmse = running_rmse / len_dataset
+    print(f"Validation Loss:  RMSE: {epoch_rmse:.4f}")
+
+
 def load_device_model_data(test_ood: bool, loss_function: str, with_outliers: bool):
     # Set device
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -215,7 +270,6 @@ def load_device_model_data(test_ood: bool, loss_function: str, with_outliers: bo
     # A.Compose combines multiple augmentations
     transform = A.Compose([
         A.Resize(IMG_SIZE, IMG_SIZE),  # Resize to a fixed size
-        A.RandomGridShuffle(grid=(3, 3), p=1.0),
         A.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)), # Normalize pixel values
     ], keypoint_params=A.KeypointParams(format='xy'))
     
@@ -224,7 +278,7 @@ def load_device_model_data(test_ood: bool, loss_function: str, with_outliers: bo
     else:
         dataset = KeypointDataset(root_dir='./data', image_size=IMG_SIZE, transform=transform)
 
-    dataloader = DataLoader(dataset, batch_size=32, shuffle=True)
+    dataloader = DataLoader(dataset, batch_size=16, shuffle=True)
 
     # Model, loss function, and optimizer
     if loss_function == 'generalized_gaussian':

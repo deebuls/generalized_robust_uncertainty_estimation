@@ -51,14 +51,9 @@ class KeypointDataset(Dataset):
             transformed = self.transform(image=image, keypoints=keypoints)
             image = transformed['image']
             keypoints = transformed['keypoints']
-        # Randomly set keypoints to zero for 5% of the dataset
-        if np.random.rand() < 0.05:
-            keypoints = [(0.0, 0.0)] * len(keypoints)
 
         # Convert to PyTorch tensors
         image = torch.from_numpy(image).permute(2, 0, 1).float()
         keypoints = torch.tensor(keypoints, dtype=torch.float32) / self.image_size
 
         return image, keypoints
-    
-

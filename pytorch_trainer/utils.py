@@ -23,6 +23,7 @@ class EarlyStopping:
         self.counter = 0
         self.best_score = None
         self.early_stop = False
+        self.train_uncertainty = False
         self.val_loss_min = torch.inf
         self.delta = delta
         self.filename = filename
@@ -44,6 +45,8 @@ class EarlyStopping:
             if self.verbose:
                 print(f'EarlyStopping counter: {self.counter} out of {self.patience}')
             if self.counter >= self.patience:
+                self.train_uncertainty = True
+            if self.counter >= (self.patience+2):
                 self.early_stop = True
         else:
             self.best_score = score
