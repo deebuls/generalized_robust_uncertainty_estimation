@@ -42,16 +42,16 @@ output_dir = "figs/keypoint"
 
 trained_models = {
     Model.Gaussian: [
-        ["gaussian/gaussian_with_outliers_None_resnet.pth", 0],
-        ["gaussian/gaussian_with_outliers_True_resnet.pth", 5],
+        #"gaussian/gaussian_with_outliers_None_resnet.pth",
+        "gaussian/gaussian_with_outliers_True_resnet.pth",
     ],
     Model.Laplace: [
-        ["laplace/laplace_with_outliers_None_resnet.pth", 0],
-        ["laplace/laplace_with_outliers_True_resnet.pth", 0],
+        #"laplace/laplace_with_outliers_None_resnet.pth",
+        "laplace/laplace_with_outliers_True_resnet.pth",
     ],
     Model.Generalized: [
-        ["generalized/generalized_gaussian_with_outliers_None_resnet.pth", 0],
-        ["generalized/generalized_gaussian_with_outliers_True_resnet.pth", 5],
+        #"generalized/generalized_gaussian_with_outliers_None_resnet.pth",
+        "generalized/generalized_gaussian_with_outliers_True_resnet.pth",
     ],
 }
 
@@ -88,7 +88,7 @@ def compute_predictions(batch_size=16, n_adv=3):
     adv_eps = np.linspace(0, 0.04, n_adv)
     all_summaries = []
     for method, model_path_list in trained_models.items():
-        for model_i, model_path, outlier_percentage in enumerate(model_path_list):
+        for model_i, model_path in enumerate(model_path_list):
             full_path = os.path.join(save_dir, model_path)
             model = load_model(method, full_path)
             for epsilon in adv_eps:
@@ -241,7 +241,7 @@ def gen_calibration_plot(df_image, eps=0.0, ood=False, plot=True):
         plt.figure(figsize=(14.2*cm,14.2*cm/2.0))
         g = sns.FacetGrid(df_calibration, col="Method", legend_out=False)
         g = g.map_dataframe(sns.lineplot, x="Expected Conf.", y="Observed Conf.", hue="Model Path")#.add_legend()
-        plt.savefig(os.path.join(output_dir, f"calib_eps-{eps}_ood-{ood}_panel.pdf"))
+        plt.savefig(os.path.join(output_dir, f"calib_eps-{eps}_ood-{ood}_panel.pdf"), bbox_inches='tight')
         plt.show()
 
     return df_calibration, table
@@ -249,6 +249,11 @@ def gen_calibration_plot(df_image, eps=0.0, ood=False, plot=True):
 def gen_interval_score_plot(df_image):
     print(f"Generating Interval score")
     df_pixel = df_image[(df_image["OOD"]==False) & ((df_image["Epsilon"]==0.0) | (df_image["Epsilon"]==0.02) | (df_image["Epsilon"]==0.04))]
+
+    print ("shape ", df_pixel.shape)
+    print ("shape gausssian ", df_pixel[df_pixel["Method"]=="Gaussian"].shape)
+    print ("shape laplace ", df_pixel[df_pixel["Method"]=="Laplace"].shape)
+    print ("shape Generalized ", df_pixel[df_pixel["Method"]=="Generalized"].shape)
 
     df_pixel = df_pixel[['Method', 'Epsilon', 'Keypoint', 'Mu', 'Var', 'Beta']]
     df_pixel = df_pixel.explode(['Keypoint', 'Mu', 'Var', 'Beta'])
@@ -258,13 +263,12 @@ def gen_interval_score_plot(df_image):
 
     print ("Generating RMSE Score")
     df_pixel["RMSE"] = (df_pixel["Mu"] - df_pixel["Keypoint"])**2
-    g = sns.catplot(x="Epsilon", y="RMSE", hue="Method", data=df_pixel, kind="box", whis=0.5, showfliers=False)
     #g.set(yscale="log")
     #plt.savefig(os.path.join(output_dir, f"RMSE_Adv_box_Keypoint_logscale.pdf"))
     #plt.show()
 
     g = sns.catplot(x="Epsilon", y="RMSE", hue="Method", data=df_pixel, kind="box", whis=0.5, showfliers=False)
-    plt.savefig(os.path.join(output_dir, f"RMSE_Adv_box_Keypoint.pdf"))
+    plt.savefig(os.path.join(output_dir, f"RMSE_Adv_box_Keypoint.pdf"), bbox_inches='tight')
     plt.show()
 
     print (f"Generating Interval Score")
@@ -292,12 +296,102 @@ def gen_interval_score_plot(df_image):
     df_pixel["Interval Score"] = df_pixel["upper"] - df_pixel["lower"] \
      + (2/0.95)*(df_pixel["lower"]-df_pixel["Keypoint"])*(df_pixel["Keypoint"]<df_pixel["lower"]) \
      + (2/0.95)*(df_pixel["Keypoint"] - df_pixel["upper"])*(df_pixel["Keypoint"]>df_pixel["upper"])
+
+    print ('#################Interval Score ###################')
+    print (df_pixel.groupby(["Method", "Epsilon"])['Interval Score'].describe() )
+    print ('################# RMSE ###################')
+    print (df_pixel.groupby(["Method", "Epsilon"])['RMSE'].describe() )
+    print ('################# Var ###################')
+    print (df_pixel.groupby(["Method", "Epsilon"])['Var'].describe() )
+    print ('################# Beta  ###################')
+    print (df_pixel.groupby(["Method", "Epsilon"])['Beta'].describe() )
     
-    g = sns.catplot(x="Epsilon", y="Interval Score", hue="Method", data=df_pixel, kind="box", whis=0.5, showfliers=False)
-    #g.set(yscale="log")
-    plt.savefig(os.path.join(output_dir, f"Interval_score_Adv_box_Keypoint.pdf"))
+
+    cm = 1/2.54  # centimeters in inches
+    plt.figure(figsize=(14.2*cm/3.0, 14.2*cm/3.0))
+    g = sns.boxplot(hue="Epsilon", y="Interval Score", x="Method", data=df_pixel, whis=0.5, showfliers=False)
+    #g = sns.catplot(x="Epsilon", y="Interval Score", hue="Method", data=df_pixel, kind="box", whis=0.5, showfliers=False)
+    #g.ax.tick_params(labelsize=15)
+    plt.legend(fontsize='xx-small')
+    plt.savefig(os.path.join(output_dir, f"Interval_score_Adv_box_Keypoint.pdf"), bbox_inches='tight')
     plt.show()
- 
+
+    df_pixel["Entropy"] = 0.5*np.log(2*np.pi*np.exp(1.)*(df_pixel["Var"]))
+    print ("Entropy inf count :",np.sum(np.isinf(df_pixel['Entropy'])))
+    df_pixel["Entropy"].mask(df_pixel["Method"]=="Gaussian", norm.entropy(loc=df_pixel["Mu"], scale=np.sqrt(df_pixel["Var"])) ) #  entropy for laplace distirbution
+    df_pixel["Entropy"].mask(df_pixel["Method"]=="Laplace",  laplace.entropy(loc=df_pixel["Mu"], scale=df_pixel["Var"]) ) #  entropy for laplace distirbution
+    df_pixel["Entropy"].mask(df_pixel["Method"]=="Generalized",  gennorm.entropy(loc=df_pixel["Mu"], scale=df_pixel["Var"], beta=df_pixel["Beta"]) ) #  entropy for laplace distirbution
+
+    #g.set(yscale="log")
+
+    plt.figure(figsize=(14.2*cm/3.0,14.2*cm/3.0))
+    #g = sns.boxplot(x="Epsilon", y="Entropy", hue="Method", data=df_pixel, linewidth=0.75, whis=0.5, showfliers=False, fill=False, legend=False)
+    g = sns.pointplot(x="Epsilon", y="Entropy", hue="Method", data=df_pixel, errorbar="sd", capsize=.2, linewidth=0.7 )
+    plt.legend(fontsize='xx-small')
+    plt.savefig(os.path.join(output_dir, f"Entropy_Adv_box_Keypoint.pdf"), bbox_inches='tight')
+    plt.show()
+
+def gen_adv_plots(df_image):
+    df_pixel = df_image[(df_image["OOD"]==False) & ((df_image["Epsilon"]==0.0) | (df_image["Epsilon"]==0.02) | (df_image["Epsilon"]==0.04))]
+
+    df_pixel = df_pixel[['Method', 'Epsilon', 'Keypoint', 'Mu', 'Var', 'Beta']]
+    df_pixel = df_pixel.explode(['Keypoint', 'Mu', 'Var', 'Beta'])
+    df_pixel = df_pixel.astype({"Keypoint": float, "Mu": float, "Var": float, "Beta": float})
+
+    print ("Unique Adv : ", df_pixel["Epsilon"].unique())
+
+    df_pixel["Entropy"] = 0.5*np.log(2*np.pi*np.exp(1.)*(df_pixel["Var"]))
+    print ("Entropy inf count :",np.sum(np.isinf(df_pixel['Entropy'])))
+    df_pixel["Entropy"].mask(df_pixel["Method"]=="Gaussian", norm.entropy(loc=df_pixel["Mu"], scale=np.sqrt(df_pixel["Var"])) ) #  entropy for laplace distirbution
+    df_pixel["Entropy"].mask(df_pixel["Method"]=="Laplace",  laplace.entropy(loc=df_pixel["Mu"], scale=df_pixel["Var"]) ) #  entropy for laplace distirbution
+    df_pixel["Entropy"].mask(df_pixel["Method"]=="Generalized",  gennorm.entropy(loc=df_pixel["Mu"], scale=df_pixel["Var"], beta=df_pixel["Beta"]) ) #  entropy for laplace distirbution
+
+    df_pixel["Error"] = np.abs(df_pixel["Mu"] - df_pixel["Keypoint"])
+
+    ### Plot epsilon vs error per method
+    df = df_pixel.groupby([df_pixel.index, "Method", "Epsilon"]).mean().reset_index()
+    df_by_method = df_pixel.groupby(["Method", "Epsilon"]).mean().reset_index()
+    sns.lineplot(x="Epsilon", y="Error", hue="Method", data=df_by_method)
+    plt.savefig(os.path.join(output_dir, f"adv_method_error.pdf"))
+    plt.show()
+
+    ### Plot epsilon vs uncertainty per method
+    sns.lineplot(x="Epsilon", y="Entropy", hue="Method", data=df_by_method)
+    plt.savefig(os.path.join(output_dir, f"adv_method_entropy.pdf"))
+    plt.show()
+    # df_by_method["Entropy"] = 0.5*np.log(2*np.pi*np.exp(1.)*(df_by_method["Sigma"]**2))
+    # sns.lineplot(x="Epsilon", y="Entropy", hue="Method", data=df_by_method)
+    # plt.savefig(os.path.join(output_dir, f"adv_ood-{ood}_method_entropy.pdf"))
+    # plt.show()
+
+
+    ### Plot entropy cdf for different epsilons
+    #unc_ = np.linspace(df["Entropy"].min(), df["Entropy"].max(), 100)
+
+    #df_cumdf = list()
+    #for method in df["Method"].unique():
+    #    for eps in df["Epsilon"].unique():
+    #        df_subset = df[
+    #            (df["Method"]==method) &
+    #            (df["Epsilon"]==eps)]
+    #        if len(df_subset) == 0:
+    #            continue
+    #        unc = np.sort(df_subset["Entropy"])
+    #        prob = np.linspace(0,1,unc.shape[0])
+    #        f_cdf = scipy.interpolate.interp1d(unc, prob, fill_value=(0.,1.), bounds_error=False)
+    #        prob_ = f_cdf(unc_)
+
+    #        df_single = {'Method': method,
+    #            'Epsilon': eps, "Entropy": unc_, 'CDF': prob_}
+    #        df_cumdf.append(df_single)
+
+    #df_cumdf = pd.DataFrame(df_cumdf)
+    #print (df_cumdf)
+    #g = sns.FacetGrid(df_cumdf, col="Method")
+    #g = g.map_dataframe(sns.lineplot, x="Entropy", y="CDF", hue="Epsilon", errorbar=None).add_legend()
+    #plt.savefig(os.path.join(output_dir, f"adv__cdf_method.pdf"))
+    #plt.show()
+
 def gen_ood_comparison(df_image, unc_key="Entropy"):
     print(f"Generating OOD plots with unc_key={unc_key}")
 
@@ -311,7 +405,7 @@ def gen_ood_comparison(df_image, unc_key="Entropy"):
     #print (inf_id.head())
     df_pixel["Entropy"] = 0.5*np.log(2*np.pi*np.exp(1.)*(df_pixel["Var"]))
     print ("Entropy inf count :",np.sum(np.isinf(df_pixel['Entropy'])))
-    df_pixel["Entropy"].mask(df_pixel["Method"]=="Gaussian", norm.entropy(loc=df_pixel["Mu"], scale=np.sqrt(df_pixel["Var"])) ) #  entropy for laplace distirbution
+    df_pixel["Entropy"].mask(df_pixel["Method"]=="Gaussian", norm.entropy(loc=df_pixel["Mu"], scale=np.sqrt(df_pixel["Var"])) ) #  entropy for Gaussian distirbution
     df_pixel["Entropy"].mask(df_pixel["Method"]=="Laplace",  laplace.entropy(loc=df_pixel["Mu"], scale=df_pixel["Var"]) ) #  entropy for laplace distirbution
     df_pixel["Entropy"].mask(df_pixel["Method"]=="Generalized",  gennorm.entropy(loc=df_pixel["Mu"], scale=df_pixel["Var"], beta=df_pixel["Beta"]) ) #  entropy for laplace distirbution
 
@@ -432,10 +526,10 @@ else:
     df_image = compute_predictions()
     df_image.to_pickle("cached_keypoint_results.pkl")
 
-quit()
-gen_calibration_plot(df_image)
-df_image["Mu"] = df_image["Mu"] * IMG_SIZE
-df_image["Keypoint"] = df_image["Keypoint"] * IMG_SIZE
+#gen_calibration_plot(df_image)
+#df_image["Mu"] = df_image["Mu"] * IMG_SIZE
+#df_image["Keypoint"] = df_image["Keypoint"] * IMG_SIZE
 gen_interval_score_plot(df_image)
-gen_ood_comparison(df_image)
+gen_adv_plots(df_image)
+#gen_ood_comparison(df_image)
             

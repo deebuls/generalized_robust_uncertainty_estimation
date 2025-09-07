@@ -115,7 +115,38 @@ class EvidentialLoss(torch.nn.Module):
 
  
         return loss.mean()
-    
+
+
+def NIG_NLL(y, gamma, v, alpha, beta, reduce=True):
+    twoBlambda = 2*beta*(1+v)
+    nll = 0.5 * torch.log(torch.pi / v) \
+        - alpha * torch.log(twoBlambda) \
+        + (alpha + 0.5) * torch.log(v * (y - gamma)**2 + twoBlambda) \
+        + torch.lgamma(alpha) \
+        - torch.lgamma(alpha + 0.5)
+
+    if reduce:
+        return torch.mean(nll)
+    else:
+        return nll
+
+def KL_NIG(mu1, v1, a1, b1, mu2, v2, a2, b2):
+    KL = 0.5 * (a1 - 1) / b1 * (v2 * (mu2 - mu1)**2) \
+        + 0.5 * v2 / v1 \
+        - 0.5 * torch.log(torch.abs(v2) / torch.abs(v1)) \
+        - 0.5 \
+        + a2 * torch.log(b1 / b2) \
+        - (torch.lgamma(a1) - torch.lgamma(a2)) \
+        + (a1 - a2) * torch.digamma(a1)
+
+    return KL
+
+
+def EvidentialRegression(y_true, evidential_output, coeff=1.0):
+    gamma, v, alpha, beta = tf.split(evidential_output, 4, axis=-1)
+    loss_nll = NIG_NLL(y_true, gamma, v, alpha, beta)
+    loss_reg = NIG_Reg(y_true, gamma, v, alpha, beta)
+    return loss_nll + coeff * loss_reg
 
 def GeneralGaussianNLLLoss(input, target, alpha, beta, eps=1e-06, reduction='mean'): 
   
