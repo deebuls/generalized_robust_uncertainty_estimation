@@ -1,0 +1,105 @@
+Reviewer 9 of IROS 2025 submission 2656
+
+Comments to the author
+======================
+
+Summary
+The paper presents a novel general loss function that can
+adapt to express various families of distributions
+including the Laplace, normal, and Cauchy distribution. The
+density of the tails depends on two robustness parameters
+which are optimized along with the weights during training.
+This allows the loss function to adapt to various levels of
+outliers in the training set. The loss function is
+presented and evaluated in the context of estimation of
+uncertainty in regression.
+
+While the related work addresses several important papers
+in the field, two important aspects of uncertainty
+estimation are left out in the paper: The distinction
+between epistemic and aleatoric uncertainty, and the
+ability of uncertainty estimation methods to handle
+multi-model probability distributions. It is arguably an
+important discussion especially as the presented method
+cannot, in its given form, handle multimodal distributions,
+which is one of the notable aspects of sampling-based
+methods. The presented method is evaluated against several
+state-of-the-art methods on both synthetic and real-world
+datasets, including a robotic grasping experiment. In the
+first experiment where no artificial contamination of
+outliers was performed (e.i. experiment C), it performed
+slightly better than deep ensembles (which is considered
+state-of-the-art), however, the deep ensemble method was
+left out in the grasping experiment.
+
+While the general flow of the paper and the language is
+fine, if sometimes a bit vague, there are numerous errors
+and inconsistencies when reading the paper in-depth.
+Furthermore, the evaluation descriptions lack details, such
+as clear descriptions of the 1D regression problem and the
+toy dataset.
+
+For specific points, see below:
+
+Related work
+The related work addresses several important papers in the
+field. However, the authors omit to discuss two important
+aspects of uncertainty estimation:
+1) the distinction between epistemic and aleatoric
+uncertainty, and 2) The ability to handle multi-modal
+probability distributions.
+As a minor correction: Instead of writing that all Bayesian
+methods require doubling the model size, it should be
+stated that the model size increases, as this leaves room
+for Bayesian methods where the weights are not approximated
+as independent Normal distributions.
+
+Evaluation
+The method is evaluated using the Interval score against
+several alternative uncertainty estimation methods,
+including deep ensembles:
+A) A simulated 1D regression problem with introduced
+outliers in the training data. Note: it is unclear what
+function is being regressed.
+B) Uncertainty estimation on 9 UCI (real world) datasets
+C) Toy dataset contaminated with 10% outliers. It is
+unclear what the toy dataset is.
+d) Keypoint estimation on the Cornell dataset. 10% outliers
+have been simulated in the dataset.
+The estimated key point with corresponding uncertainty was
+also used in a grasping experiment. Grasping performance
+when using deep ensembles have not been evaluated. It is
+unclear why this is the case.
+
+Clarity of the presented method
+- While the flow and overall structure is fine, there is a
+significant number of problems when reading it closely.
+E.g.
+  - Vague language:
+    * "The NLL of a normal distribution allows us to
+estimate both the value and the uncertainty in the
+prediction..." (column 2 page 2)
+    * "... allowing the optimization algorithm to make
+progress." (column 1 page 3)
+  - Errors:
+    * such as term 2 refers to both alpha and beta while
+only the beta value appears in term 2 (column 1 page 3)
+    * Equation column 2 page 3 contains max for y in
+y_min,y_max, but y is not part of the equation being
+maximized.
+  - Inconsistencies:
+    * in the use of the sign() function: on column 2 page 3
+the derivative of |r| is stated to be -sign(r) using a
+definition of sign(x) where it is negative if x is
+positive, which is the opposite of the usual definition of
+sign. This is however different than the sign() function
+used for the partial derivative of L wrt r used on column 1
+page 3.
+
+Suggestion for specific edits
+- the derivative dL/dr is stated on column 1 page 3 without
+a derivation, but the partial derivative dL/dr is derived
+on column 2. The two are the same but with opposite sign,
+due to the definition of the sign function used. It might
+increase readability if the derivation was presented first,
+using the same definition of sign(). 

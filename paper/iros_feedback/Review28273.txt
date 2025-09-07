@@ -1,0 +1,74 @@
+Reviewer 7 of IROS 2025 submission 2656
+
+Comments to the author
+======================
+
+The authors tackle the problem of uncertainty estimation
+for deep regression with outlier-contanimnated data, which
+is commonly encountered in robotic applications.
+Specifically, for computation and run-time efficiency, the
+author concentrate single-model uncertainty estimation,
+which predicts the parameters of a presumed distribution
+for the outputs, such as Gaussian, Laplace and Cauchy. To
+avoid manual selection of the form of the output
+distribution, the authors propose to utilize the
+generalized normal distribution, a super-set of those
+mentioned before. Experiments on 1-D toy data, UCI data and
+a robotic grasp key-point detection demonstrate the
+effectiveness of proposed idea. Finally, an evaluation on
+the real robot has been conducted.
+
+Strengths:
+- This work addressed an important problem, regression
+uncertainty estimation with outliers, which is
+under-explored and highly important in robotics.
+
+- The proposed idea of employing generalized Gaussian to
+avoid manual distribution form selection is sensible and
+theoretically sound according to the properties analyzed in
+the method part.
+
+- The experiments are comprehensive in terms of relevant
+tasks ranging from toy data to real-world applications and
+included baselines for comparative study.
+
+- The idea is also evaluated on a real robot, demonstrating
+its applicability in robotics.
+
+
+Weakness/Suggestions:  
+- The major issue is that the status of the manuscript
+seems not ready for publication: 1. A related work section
+is missing, causing troubles for the readers to locate the
+contribution of this work in the literature; 2. The
+technical section is wordy and focused too much on the
+introduction of the mathematical properties of the
+generalized Gaussian, which are not the main technical
+contribution of this work. My suggestion would be rewrite
+this part in a concise manner and focus more on the
+proposed technique including the implementation details. 
+
+- Technically, the introduced properties provide a good
+motivation why the authors decided to choose this form.
+However, it would be more scientifically interesting if the
+authors can provide some insights or empirical analysis how
+these properties affect the performance when using this
+loss for uncertainty estimation. Especially, there is no
+discussion related to the Normal-inverse-Gamma
+distribution, used in the evidential uncertainty
+estimation.
+
+- In experiments, the quality metric of uncertainty
+estimation, Interval Score, lacks a retrievable citation
+and a clear definition. This would cause mis-understanding
+or confusion for the readers.
+
+- In Table I, the performance of the baseline: Evidential,
+seems to under-perform a lot, which is a bit weird. An
+analysis or explanation would be helpful in understanding
+why it fails.  
+
+- Finally, some raw images in the real-robot experiments
+can be displayed to show how noisy the real-data can be,
+which help further consolidate the claimed benefits in this
+work.

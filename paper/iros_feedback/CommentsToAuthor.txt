@@ -1,0 +1,20 @@
+Comments to author (Associate Editor)
+=====================================
+
+
+Overall, the paper is promising and the topic is certainly
+of interest to the community. However, the paper has severe
+weak points in the evaluation making it not sufficiently
+feasible to asses and clearly see the contribution. Also
+the magnitude of contribution/improvement over the state of
+the art is not clear enough from the manuscript, especially
+due to a lacking related work section and evaluation and
+the choice of baselines. The authors should take the
+recommendations of the reviewers seriously to make this a
+stronger paper.
+
+
+----------------------------------------
+Comments on Video Attachment:
+
+[None found]

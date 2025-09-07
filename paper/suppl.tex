@@ -1,0 +1,67 @@
+\section*{SUPPLEMENTARY MATERIALS}
+\subsubsection{Interval Score} uses the prediction interval, with lower and upper endpoints represented by predictive quantiles at level $\frac{\alpha}{2}$ and $1 - \frac{\alpha}{2}$. The Interval Score is defined as :
+\begin{equation}
+S_\alpha^{int} (l,u;y) = (u - l) +\frac{2}{\alpha}(l-y)\mathbf{1}\{y<l\} + \frac{2}{\alpha}(y-u)\mathbf{1}\{y>u\}
+\end{equation}
+
+
+\subsubsection{Robot grasping experiment individual experiment }
+
+Experiment results of individual obejcts 
+\begin{table}[htbp]
+	\caption{Result table from grasping experiment}
+	\centering
+	\begin{tabular}{|l|c|c|c|c|c|c|c|c|c|c|}
+		\hline
+		
+		 & \multicolumn{2}{c|}{\textbf{Generalized}} & \multicolumn{2}{c|}{\textbf{Gaussian}} & \multicolumn{2}{c|}{\textbf{Laplace}} & \multicolumn{2}{c|}{\textbf{Cauchy}} & \multicolumn{2}{c|}{\textbf{Evidential}} \\ \cline{2-11} 
+		
+		& P1 & P2 & P1 & P2 & P1 & P2 & P1 & P2 & P1 & P2 \\ \hline
+		Torch & 9 & 5 & 6 & 2 & 8 & 5 & 5 & 0 & 4 & 0 \\ \hline
+		Marker & 9 & 4 & 7 & 1 & 7 & 2 & 5 & 1 & 5 & 1 \\ \hline
+		Mouse & 4 & 3 & 2 & 2 & 3 & 2 & 2 & 3 & 4 & 3 \\ \hline
+		Brush & 5 & 4 & 4 & 3 & 6 & 4 & 3 & 1 & 3 & 0 \\ \hline
+		Stapler & 6 & 7 & 1 & 4 & 3 & 5 & 1 & 3 & 1 & 2 \\ \hline
+		Paste & 8 & 8 & 4 & 4 & 8 & 7 & 5 & 5 & 4 & 3 \\ \hline
+		Cube & 6 & 6 & 5 & 5 & 6 & 6 & 5 & 5 & 5 & 5 \\ \hline
+		Duster & 6 & 5 & 4 & 2 & 7 & 5 & 2 & 1 & 3 & 0 \\ \hline
+		Box & 9 & 4 & 7 & 3 & 9 & 3 & 7 & 2 & 7 & 1 \\ \hline
+		Allen & 10 & 5 & 4 & 2 & 9 & 2 & 8 & 2 & 8 & 3 \\ \hline
+		
+	\end{tabular}
+	
+\end{table}
+
+
+\subsubsection*{LIMITATIONS}
+
+The proposed loss function is not convex in general. 
+To demonstrate non-convexity, consider the following scenario:
+Fixed $\alpha$, Let $\alpha = 1$.
+Varying $r$, Choose two points $r1 = 1$ and $r2 = -1$.
+Convexity condition: A function f is convex if for all $r1$, $r2$ and $\lambda \in [0, 1]$:
+\begin{equation*}
+    f(\lambda x1 + (1-\lambda) x2) \leq \lambda f(x1) + (1-\lambda)L(x2)
+\end{equation*}
+Evaluating the loss function:
+\begin{equation*}
+L(r1) = 1 - log(\beta) + log(\Gamma(1/\beta))
+\end{equation*}
+\begin{equation*}
+L(r2) = 1 - log(\beta) + log(\Gamma(1/\beta)) \\
+\end{equation*}
+\begin{equation*}
+L(\lambda r1 + (1-\lambda)r2) = | \lambda - (1-\lambda)|^\beta - log(\beta) + log(\Gamma(1/\beta))
+\end{equation*}
+Checking the convexity condition:
+For $\lambda$ = 0.5:
+\begin{equation*}
+   L(0.5r1 + 0.5r2) = 0 - log(\beta) + log(\Gamma(1/\beta)) 
+\end{equation*}
+\begin{multline*}
+\lambda L(r1) + (1-\lambda)L(r2) \\ 
+0.5(1 - log(\beta) + log(\Gamma(1/\beta))) \\ + 0.5(1 - log(\beta) + log(\Gamma(1/\beta))) = 1 - log(\beta) + log(\Gamma(1/\beta))
+\end{multline*}
+The convexity condition is not satisfied for all $\lambda \in [0, 1]$. Therefore, the loss function is not convex.
+While the loss function is not globally convex, it might be locally convex under certain conditions. However, the general form presented here does not guarantee convexity. 
+We overcome this limitation by adding a software ode by clamping the loss to the very small number as possible in the cpu. This ensures that the residual never becomes zero and thus 

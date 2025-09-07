@@ -1,11 +1,10 @@
 filename=root
 
 pdf:
-	mkdir -p build
-	pdflatex --output-directory build ${filename}
-	bibtex build/${filename}||true
-	pdflatex --output-directory build ${filename}
-	pdflatex --output-directory build ${filename}
+	pdflatex --output-directory build ${filename}.tex
+	bibtex build/${filename}.aux||true
+	pdflatex --output-directory build ${filename}.tex
+	pdflatex --output-directory build ${filename}.tex
 	mv build/${filename}.pdf .
 
 read:

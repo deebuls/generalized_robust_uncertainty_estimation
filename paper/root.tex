@@ -17,7 +17,7 @@
 %This is a known problem with pdfLaTeX conversion filter. The file cannot be opened with acrobat reader
 %Please use one of the alternatives below to circumvent this error by uncommenting one or the other
 %\pdfobjcompresslevel=0
-\pdfminorversion=4
+%\pdfminorversion=4
 
 % See the \addtolength command later in the file to balance the column lengths
 % on the last page of the document
@@ -39,6 +39,13 @@
 \usepackage{lipsum}  
 \usepackage{subfigure}
 \usepackage{multirow}
+\raggedbottom
+
+
+\usepackage[style=ieee,minbibnames=1,maxbibnames=3]{biblatex}
+\AtBeginBibliography{\footnotesize}
+%\addbibresource{IEEEabrv.bib}
+\addbibresource{root.bib}
 
 
 \usepackage[capitalise,nameinlink]{cleveref} %Cref
@@ -82,32 +89,34 @@ General and Robust Loss Function for Uncertainty Estimation}
 %The use of robustness parameter enables the training of the DNN's in which the shape of the loss automatically adapts itself during training, thus improving performance on robotics tasks such as keypoint estimation and monocular depth estimation, even if  the training dataset contain noise and outliers.
 
 %CGI format
-The negative log likelihood loss function based uncertainty estimation often struggles with outliers in datasets, hindering the performance of deep neural networks (DNNs) in robotics applications. 
-To address this limitation, we present a generalization of negative log likelihood based uncertainty estimation.
-Our loss function generalizes algorithms built around negative log likelihood loss minimization by introducing a new robustness parameter, which improves performance on basic robotics tasks that involve datasets with outliers.
+The uncertainty estimation based on the negative logarithmic likelihood loss function often struggles with outliers in data sets, which hinders the performance of deep neural networks (DNNs) in robotics applications. 
+To address this limitation, we present a generalization of negative log likelihood-based uncertainty estimation.
+Our loss function generalizes algorithms built around negative log-likelihood loss minimization by introducing a new robustness parameter, which improves performance on basic robotics tasks that involve datasets with outliers.
 By generalizing the negative log likelihood loss, our approach extends its applicability to a wider range of distributions, including the normal, Laplace, and Cauchy distributions. This flexibility allows the DNN to dynamically adapt its learning process based on the percentage of outliers present in the dataset.
-Our experiments show that the proposed loss function is significantly more resistant to outliers than existing uncertainty estimation methods, thus improving performance on robotics tasks such as keypoint estimation and antipodal grasping.
+Our experiments show that the proposed loss function is significantly more resistant to outliers than existing uncertainty estimation methods, thus improving performance on robotic tasks such as keypoint estimation and antipodal grasping.
 \end{abstract}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{INTRODUCTION}
+\section{Introduction}
 %Robustness
-Robustness to outliers in data is an important factor when choosing a loss function for training deep neural networks(DNN). This is especially true in robotics tasks, where datasets often contain noisy labels and outliers.
-This requirement also applies to uncertainty estimation methods, which are essential for deploying DNN in safety-critical robotics tasks \cite{borg_safely_2019, schwalbe_survey_2020}.
-Researchers have developed various robust uncertainty estimation methods that can estimate correct uncertainty in the presence of outliers ~\cite{nair_laplace_2O22, barron2019general} .
-Currently, roboticists spend considerable time either cleaning datasets or experimenting with different robust loss functions. 
+\noindent %Robustness to outliers in data is an important factor when choosing a loss function for training deep neural networks (DNN). This is especially true in robotics tasks, where datasets often contain noisy labels and outliers.
+When selecting a loss function for training deep neural networks (DNN), the ability to handle outliers in the data is a crucial consideration. This is particularly significant in the field of robotics, where datasets often contain mislabeled information and anomalous data points.
+This requirement also applies to uncertainty estimation methods, which are essential for the deployment of DNN in safety-critical robotic tasks \cite{borg_safely_2019, schwalbe_survey_2020}.
+Researchers have devised robust uncertainty estimation methods capable of accurately estimating uncertainty despite outliers [3], [4]. Currently, roboticists invest significant time in cleaning data sets or testing various robust loss functions. Thus, this study seeks to address the following research question.
+%Researchers have developed various robust uncertainty estimation methods that can estimate correct uncertainty in the presence of outliers ~\cite{nair_laplace_2O22, barron2019general} .
+%Currently, roboticists spend considerable time either cleaning datasets or experimenting with different robust loss functions. 
 %With different loss functions they compare both the estimated uncertainty and along-with minimum error. 
-In this work, we aim to answer the following research question: \textit{When training a regression model on a dataset containing a certain percentage of outliers, how can the model accurately estimate the uncertainty of model's predictions by selecting the appropriate robust loss function?}
+%In this work, we aim to answer the following research question: 
+\textit{When training a regression model on a dataset containing outliers, how can the model accurately estimate the uncertainty of the model's predictions by selecting the appropriate robust loss function?}
 
-Uncertainty estimation in DNN is typically categorized into three main approaches: 
+Uncertainty estimation in DNN is generally divided into three main approaches: 
 \begin{inparaenum}
-	\item Bayesian methods \cite{kendall_what_2017, dusenberry2020analyzing}; \item Sampling based methods \cite{gal_dropout_2016, lakshminarayanan_simple_2016} and 
-	\item Single model methods \cite{nix1994estimating} \cite{amini_deep_2019, sensoy_evidential_2018, nair_laplace_2O22}.
-\end{inparaenum}
- While Bayesian and sampling-based methods often deliver state-of-the-art performance \cite{dusenberry2020efficient, wen2020batchensemble}, they come with significant computational overhead. Bayesian methods require doubling the model size and inference time \cite{blundell2015weight} , while sampling methods increase inference time substantially \cite{gal_dropout_2016, lakshminarayanan_simple_2016} . These drawbacks make them impractical for robotics applications that demand lean models and fast inference times. Single-model uncertainty estimation, on the other hand, can assess uncertainty with a single pass through the model and only a minimal increase in model size \cite{nix1994estimating, malinin_regression_2020, sensoy_evidential_2018} . Given its suitability for robotics systems, we focus on single-model uncertainty estimation in this work.
-
-Negative likelihood-based loss functions offer a simple approach to uncertainty estimation in DNN. These methods model the output of the DNN as a statistical distribution, often the normal distribution. The loss function is then calculated as the negative log-likelihood (NLL) of the probability density function (PDF) of the chosen distribution. Studies have shown that using fat-tailed distributions like the Laplace distribution can make the model more robust to outliers in the data \cite{nair_laplace_2O22}. However, selecting the most appropriate distribution for a specific dataset still remains a manual process.
+	\item Bayesian methods \cite{kendall_what_2017,dusenberry2020analyzing}; \item Sampling-based methods \cite{gal_dropout_2016, lakshminarayanan_simple_2016}; and 
+	\item Single-model methods \cite{nix1994estimating} \cite{amini_deep_2019, sensoy_evidential_2018, nair_laplace_2O22}.
+\end{inparaenum} Although Bayesian and sampling-based methods often achieve state-of-the-art performance \cite{dusenberry2020efficient, wen2020batchensemble}, they involve significant computational costs. Bayesian methods require increased model size and inference time \cite{blundell2015weight}, whereas sampling methods substantially increase inference time \cite{gal_dropout_2016, lakshminarayanan_simple_2016}. These limitations render them impractical for robotics applications that require efficient models and quick inference times. Conversely, single-model uncertainty estimation can evaluate uncertainty with a single model pass and only a minimal increase in model size \cite{nix1994estimating, malinin2018predictive, sensoy_evidential_2018}. Therefore, we concentrate on single-model uncertainty estimation in this study.
+ 
+Negative likelihood-based loss functions offer a single pass, efficient, and simple approach to uncertainty estimation in DNN. These methods model the output of the DNN as a statistical distribution. The loss function is then calculated as the negative log-likelihood (NLL) of the probability density function (PDF) of the chosen distribution. Any distribution can be selected on the basis of its application. For example, Normal distribution\cite{nix1994estimating} can be used in when the predicted value is a real number and does not contain outliers, Laplace distribution can be used when there are outliers in the data \cite{nair_laplace_2O22}, when the data distribution to learn is fat tailed then one can use Cauchy distribution \cite{bosman2022cauchy}. However, selecting the most appropriate distribution for a specific dataset still remains a manual process.
 
 \begin{figure}
 	\centering
@@ -140,27 +149,29 @@ Negative likelihood-based loss functions offer a simple approach to uncertainty 
 	\end{tabular}	
 	
 	%\vspace*{-3mm}
-	\caption{Illustrative comparison of uncertainty estimation on 1D regression data with outliers. Row 1 shows data with no outliers while row 2 data contains 10\% outliers. The blue dots are clean data while red dots are outlier. The shaded blue region is the estimated uncertainty. Both Gaussian and Ensemble methods are more sensitive to outliers, the blue region are more distorted by the outlier data points, while for generalized the blue region has distorted less indicateing less impact of outliers.}
+	\caption{Illustrative comparison of uncertainty estimation on 1D regression data with outliers. Row 1 shows data with no outliers while row 2 data contains 10\% outliers. The blue dots are clean data while red dots are outlier. The shaded blue region is the estimated uncertainty. Both Gaussian and Ensemble methods are more sensitive to outliers, the blue region are more distorted by the outlier data points, while for our generalized approach the blue region has distorted less indicating less impact of outliers.}
 	\label{fig:toy-introduction}
 \end{figure}
-
 
 In this paper, we present a general uncertainty estimation loss function that is a super-set of common robust uncertainty estimation loss functions.
 Our loss function is the negative log likelihood of the generalized normal distribution \cite{nadarajah2005generalized} . 
 %The generalized normal distribution is parameterized by 2 parameter alpha and beta. 
 %In our work we interpret the beta parameter as the robustness parameter. 
-Using the negative log-likelihood of the generalized normal distribution as our loss function, we demonstrate that by minimizing the loss, any gradient-based optimization can automatically adjust the robustness of the loss without needing manual intervention.
-This flexible form of our loss function is especially useful for models that produce high dimensional outputs, like those used for depth estimation and keypoint estimation. The loss function can assign a unique robustness value to each output dimension, allowing the model to adjust the robustness of its loss for each dimension individually. This robustness to outliers of our proposed loss function is demonstrated using a 1D regression dataset containing both heteroskedastic noise and outliers in \Cref{fig:toy-introduction}. Uncertainty predicted by Gaussian and Ensemble methods are heavily affected by outliers, while uncertainty predicted by our proposed method degrades the least while maintaining same accuracy.
+Using the negative log-likelihood of the generalized normal distribution as our loss function, we demonstrate that by minimizing the loss, any gradient-based optimization can automatically adjust the robustness of the loss without needing manual intervention on selection of the appropriate output distribution.
+This flexible form of our loss function is especially useful for models that produce high-dimensional output, such as those used for depth estimation and key-point estimation. The loss function can assign a unique robustness value to each output dimension, allowing the model to individually adjust the shape of its loss for each dimension. This robustness to outliers of our proposed loss function is demonstrated using a 1D regression dataset containing both heteroskedastic noise and outliers in \Cref{fig:toy-introduction}. 
+The expectation is that the model learns about the output and the corresponding uncertainty even in the presence of outliers.
+We observe that when the data contains some outliers the Gaussian method both the output and uncertainty prediction are wrong. For Ensemble method even though the predicted values are correct the predicted uncertainty are large for regions containing outliers.
+While uncertainty predicted by our proposed method degrades the least while maintaining same accuracy.
 
 This paper investigates the use of the generalized normal distribution \cite{nadarajah2005generalized} for maximum likelihood-based uncertainty estimation. Our work makes the following contributions:
 \begin{compactenum}
-	\item We propose a new loss function that adapts between multiple robust loss functions, based on the outliers in the data and thus improves the robustness of maximum likelihood-based uncertainty estimation methods;\par
+	\item We propose a new loss function that adapts between multiple robust loss functions, and thus improves the robustness of maximum likelihood-based uncertainty estimation methods;\par
 	%	\item We use a proper scoring rule (Interval Score) as a metric to compare estimated uncertainties;\par
 	\item We evaluate the estimated uncertainty on different regression benchmarks and also on a complex vision regression tasks of keypoint estimation; and\par
 	\item We demonstrate and evaluate the use of estimated uncertainty by conducting a robotic experiment for grasp selection for antipodal grasp.\par
 \end{compactenum}
 
-\section{Robust Uncertainty estimation}
+\section{Robust Uncertainty Estimation}
 In a regression learning problem, we work with a training dataset $D$ that consists of pairs $(x, y)$ drawn from a joint distribution $D(X, Y)$. Each pair contains an input $x$ from the input set $X$ and a corresponding label $y$ from the label set $Y$.
 We use a neural network $f(\theta)$, where $\theta$ represents the network's parameters. Our goal is to train these parameters by minimizing an empirical loss function $l$. This can be expressed as:
 \begin{equation*}
@@ -171,12 +182,12 @@ In a standard regression scenario (without considering robustness or outliers), 
 \begin{equation*} 
 \ell(x,y, \theta) = \frac{1}{2}(y - f_\theta(x))^2
  \end{equation*}   
- The square of residuals is a reformulation of the negative log likelihood of a normal distribution. This approach provides a point estimate, essentially estimating the mean ($\mu$) of a normal probability distribution. However, it's limited in its ability to provide uncertainty estimation. A straightforward enhancement to the basic regression model is to estimate the complete conditional probability distribution. This can be achieved by predicting both the mean ($\mu$) and the variance ($\sigma^{2}$) of the distribution, assuming it follows a Gaussian (normal) distribution. This approach, as described by \cite{nix1994estimating}, provides more information about the uncertainty of predictions.
+ The square of residuals is a reformulation of the negative log likelihood of a normal distribution. This approach provides a point estimate, essentially estimating the mean ($\mu$) of a normal probability distribution. However, it's limited in its ability to provide uncertainty estimation. A simple enhancement to the basic regression model is to estimate the complete conditional probability distribution. This can be achieved by predicting both the mean ($\mu$) and the variance ($\sigma^{2}$) of the distribution, assuming it follows a Gaussian (normal) distribution. This approach, as described by \cite{nix1994estimating}, provides more information about the uncertainty of predictions.
 
-Although the NLL of a normal distribution allows us to estimate both the value and the uncertainty in the prediction, it suffers from a lack of robustness. When the training data contains even a small number of outliers, it can lead to significant shifts in both the predicted values and their associated uncertainties.
+Normal distribution NLL enables prediction of both values and their uncertainties, but lacks robustness to outliers. Even small amounts of contaminated training data can cause substantial changes in both predicted values and uncertainty estimates.
 This sensitivity to outliers means that these loss functions have a low tolerance for outlier data points. In statistical terms, these loss functions have a high breakaway point \cite{huber2004robust}.
 
-For enhancing the robustness of NLL-based uncertainty estimation against outliers, various loss functions have been proposed utilizing fat-tailed distributions \cite{nair_laplace_2O22}. While these approaches have demonstrated effectiveness in mitigating the impact of outliers, the selection of the appropriate distribution hyperparameter often remains a manual process, relying on empirical experimentation.
+To improve the robustness of NLL-based uncertainty estimation against outliers, various loss functions have been proposed utilizing fat-tailed distributions \cite{nair_laplace_2O22}. While these approaches have demonstrated effectiveness in mitigating the impact of outliers, the selection of the appropriate distribution hyperparameter often remains a manual process, relying on empirical experimentation.
 
 In this work, we introduce a novel loss function that adaptively selects the suitable distribution based on the presence of outliers within the dataset. Our proposed loss function is grounded in the generalized normal distribution, a versatile distribution capable of representing different data distirbutions, including normal, Laplace, and Cauchy distributions. This flexibility enables our loss function to effectively model data with varying levels of tail behavior.
 
@@ -212,10 +223,11 @@ where: $N$ is the number of data points $r_i$ is the i-th error or residual.  \C
 The loss function consist of 3 components : 
 \begin{inparaenum}
     \item 
- term 1: This term measures the magnitude of the residual (error) between a predicted value and an actual value. The parameters $\alpha$ and $\beta$ control the shape and scale of this term.
-     \item term 2 : These terms are regularization terms that help prevent over-fitting. They penalize large values of $\alpha$ and small values of $\beta$, which can lead to unstable models.
+ term 1: This term measures the magnitude of the residual (error) between a predicted value and an actual value. The parameters $\alpha$ and $\beta$ control the scale and shape of this term.
+     \item term 2 : These terms are regularization terms that help prevent over-fitting. They penalize small values of $\beta$, which can lead to unstable models.
     \item term 3: This term involves the gamma function and it ensures that the loss function is well-defined for all values of $\alpha$ and $\beta$.
 \end{inparaenum}
+
 The proposed loss function has many properties that makes it suitable for gradient based optimization. 
 \subsubsection{Differentiability} 
 The loss function is differentiable almost everywhere. To show this, we can compute its partial derivatives with respect to $x$, $\alpha$, and $\beta$. Partial derivative with respect to r, for $r \neq 0 $ : 
@@ -233,20 +245,60 @@ the partial derivative with respect to $\beta$
 \begin{equation*}
     \frac{\partial L}{\partial \beta} = \frac{|r|^{\beta}}{\alpha^{\beta}} \log \left( \frac{|r|}{\alpha} \right) - \frac{1}{\beta} + \frac{\Gamma'(1/\beta)}{\Gamma(1/\beta)}
 \end{equation*}
-From these expressions, we can see that the partial derivatives are continuous and defined for all $r$, $\alpha$, and $\beta$ except for r = 0. Therefore, the loss function is differentiable almost everywhere. This ensures that the gradient can be computed at most points, allowing the optimization algorithm to make progress.
+
+The partial derivatives are continuous and well-defined for all values of $r$, $\alpha
+$, and $\beta$, with the exception of $r = 0$. This makes the loss function differentiable almost everywhere, enabling gradient computation at most points and allowing optimization algorithms to converge effectively.
 
 \subsubsection{Unimodality} 
-While the loss function is not strictly convex, it is generally unimodal. This means that there is a single global minimum. To show this, we can analyze the second-order partial derivatives:
+The loss function is generally unimodal as seen in \Cref{fig:nllgeneral}. This means that there is a single global minimum. To show this, we can analyze the second-order partial derivatives:
 Second-order partial derivative with respect to $r$:
 \begin{equation*}
     \frac{\partial^2 L}{\partial r^2} = \beta (\beta-1) \frac{|r|^{\beta-2}}{\alpha^{\beta}}
 \end{equation*}
 From this expression we can see that the loss function is unimodal and thus has a single global minimum, making it easier for the optimization algorithm to converge to the optimal solution.
 
-\subsubsection{Boundedness}
-The loss function is bounded from below. The term $\log \Gamma{1/\beta}$ is bounded from below, and the remaining terms are non-negative. Therefore, the loss function cannot be arbitrarily negative.
 
-Finally, the parameters $\alpha$ and $\beta$ can be interpreted as scale and shape parameters, respectively, providing insights into the behavior of the loss function.
+%\subsubsection{Lipschitz Continutiy}
+%A function is continuous if small changes in input produce small changes in output. 
+%This prevents jumps in the loss landscape that could disrupt optimization.
+%let's compute the first derivative of $L(r)$ with respect to $r$:
+%
+%$$\frac{dL}{dr} = \frac{d}{dr}\left(\frac{|r|}{\alpha}\right)^\beta$$
+%
+%$$\frac{dL}{dr} = \beta \left(\frac{r}{\alpha}\right)^{\beta-1} \frac{d}{dr}\left(\frac{|r|}{\alpha}\right)$$
+%
+%$$\frac{dL}{dr} = \beta \left(\frac{r}{\alpha}\right)^{\beta-1} \cdot \frac{-\text{sign}(r)}{\alpha}$$
+%
+%$$\frac{dL}{dr} = -\frac{\beta}{\alpha} \left(\frac{|r|}{\alpha}\right)^{\beta-1} \text{sign}(r)$$
+%
+%where $\text{sign}(r)$ is the sign function:
+%- $\text{sign}(r) = 1$ if $r > 0$
+%- $\text{sign}(r) = -1$ if $r < 0$
+%- $\text{sign}(r) = 0$ if $r = 0$
+%
+%For Lipschitz continuity, we need to find a bound on this derivative. 
+%
+%Case 1: When $\beta \geq 1$
+%The function $|r|^{\beta-1}$ is minimized at $r = 0$ (where it equals 0 if $\beta > 1$, or 1 if $\beta = 1$) and increases as $|r|$ increases.
+%
+%For any fixed dataset with bounded values of input $x$, if we restrict output $y$ to a bounded domain $[y_{\min}, y_{\max}]$, then the derivative is bounded:
+%
+%$$\left|\frac{dL(y)}{dy}\right| \leq \frac{\beta}{\alpha} \max_{y \in [y_{\min}, y_{\max}]} \left(\frac{|r|}{\alpha}\right)^{\beta-1} = K$$
+%
+%Case 2: When $0 < \beta < 1$
+%The function $|r|^{\beta-1}$ approaches infinity as $y$ approaches $x$, which means the derivative is unbounded near $r = 0$. 
+%
+%The loss function is Lipschitz continuous with respect to $r$ when $\beta \geq 1$ and over bounded domains that do not contain singularities when $0 < \beta < 1$. 
+
+%\subsubsection{Smoothness}
+%Smoothness of the loss function allows for larger step sizes in optimization.
+%The NLL is smooth (has Lipschitz continuous gradient) when $\beta \geq 2$. For $1 < \beta < 2$, it is smooth except for $r = 0$. For $\beta \leq 1$, it is not smooth.
+%To compensate for the non-smoothness we add a small $\epsilon$ term to $r$. This provides a smooth approximation.
+
+%\subsubsection{Boundedness}
+%The loss function is bounded from below. The term 3, $ \log{\left( 2\alpha \Gamma\left(\frac{1}{\beta}\right)\right) } $ is bounded from below, and the remaining terms are non-negative. Therefore, the loss function cannot be arbitrarily negative.
+
+%Finally, the parameters $\alpha$ and $\beta$ can be interpreted as scale and shape parameters, respectively, providing insights into the behavior of the loss function.
 
 \subsection{Different Uncertainty Estimation Loss Functions}
 The generalized normal loss function consist of different NLL loss functions based on the $\beta$ parameter.
@@ -266,37 +318,58 @@ The generalized normal loss function consist of different NLL loss functions bas
 
 The generalized normal loss function provides a flexible framework for modeling different types of errors and can be adapted to specific needs by adjusting the parameters $\alpha$ and $\beta$.
 
-\section{Related Work}
-\label{sec:relatedwork}
-\subsubsection*{{\textbf{Uncertainty Estimation}}}
-In \cite{nix1994estimating} a novel approach was introduced for uncertainty estimation for neural networks by modeling outputs as Gaussian distributions and employing a negative log likelihood of the distribution as the loss function. This  method demonstrated the neural network's ability to learn both predictions and uncertainty. In \cite{blundell2015weight}, DNN uncertainty estimation was achieved by representing network weights with distributions. \cite{gal_dropout_2016} proposed a sampling based techniques using dropouts and multiple forward passes and capture the differences in the different passes as uncertainty.
-Ensemble methods, as exemplified by \cite{lakshminarayanan_simple_2016, dusenberry2020efficient} and \cite{wen2020batchensemble} currently dominate state-of-the-art uncertainty estimation. These methods leverage multiple models within a single framework to provide robust uncertainty estimates. Despite their effectiveness, ensemble methods generally necessitate multiple forward passes, limiting their applicability in real-time or resource-constrained scenarios.
-\subsubsection*{{\textbf{Single Inference Uncertainty Estimation}}}
-Several methods can estimate uncertainty using a single inference. These include:
-\begin{inparaenum}
-    \item Replacing the loss function with NLL of statistical distribution \cite{malinin_regression_2020, sensoy_evidential_2018, amini_deep_2019, nair_laplace_2O22},
-    \item Computing the closed-form posterior for the output layer \cite{Riquelme2018Deep, SnoekRSKSSPPA15},
-    \item Changing the output layer \cite{calandra2016manifold, tagasovska2019single}, 
-    \item Using spectral normalization \cite{LiuLPTBL20} and
-    \item Applying a two-sided gradient penalty  \cite{van2020uncertainty}
-\end{inparaenum}
-\subsubsection*{{\textbf{Robust Uncertainty Estimation}}}
-Robust training in the presence of outliers is a classic statistical problem often addressed using M-estimators \cite{huber2004robust}. For DNN, \cite{barron2019general} proposed a generalized M-estimator loss function that uses the negative log of the density function to improve robustness during training. \cite{lathuiliere2018deepgum} introduced a Gaussian-uniform mixture model as a loss function that can continuously adapt to outliers in the data. In \cite{nair_laplace_2O22} studied the usage of Laplace NLL as loss function for improving robustness to outliers. 
-In this work we work on a extension of this work which generalizes different fat tailed distribution based NLL loss function thus further improving robustness capability of DNN.
 
-\section{EVALUATION}
+\section{Evaluation}
 In this section, we evaluate the performance of our proposed loss function. Our focus is on demonstrating its ability to improve robustness to outliers in the data. While these benchmarks do not aim to represent the state-of-the-art for any specific task, they effectively showcase the capabilities of our loss function in learning uncertainty with outlier-contaminated datasets. For comparison, we consider the following uncertainty estimation methods: \textbf{Gaussian}, as introduced in \cite{nix1994estimating}, \textbf{Ensemble}, corresponding to the deep learning ensemble approach proposed by \cite{lakshminarayanan_simple_2016}, \textbf{Evidential}, utilizing the Normal-inverse-Gamma distribution as suggested by \cite{amini_deep_2019},  \textbf{Laplace}, as described in \cite{nair_laplace_2O22} and \textbf{Generalized} method described in this paper.
-%We evaluate these methods on a variety of tasks to demonstrate their performance in uncertainty prediction in the presence of outliers. These tasks include a 1D outlier regression dataset, real-world regression datasets, and a robotics keypoint estimation task. 
+We evaluate these methods on a variety of tasks to demonstrate their performance in uncertainty prediction in the presence of outliers. These tasks include a 1D outlier regression dataset, real-world regression datasets, and a robotics keypoint estimation task. 
 %These datasets were specifically chosen due to the presence of outliers, making them ideal for testing the robustness of our methods. 
-%Additionally, we showcase a practical application of uncertainty estimation by conducting a robot grasping experiment using keypoints predicted by different uncertainty estimation methods. 
-%This experiment highlights the real-world impact of accurate uncertainty quantification in robotic tasks. 
+Additionally, we showcase a practical application of uncertainty estimation by performing a robot grasping experiment using keypoints predicted by different uncertainty estimation methods. 
+This experiment highlights the real-world impact of accurate uncertainty quantification in robotic tasks. 
 We formulate our experiments to answer the following questions:
 \begin{enumerate}
-    \item \textbf{RQ1}: How does DNN trained using Generalized NLL compare with other uncertainty estimation methods on different regression benchmarks ?
-    \item \textbf{RQ2}: How much percentage of outliers can the different methods handle before their prediction and uncertainty deteriorates ?
+    \item \textbf{RQ1}: How much percentage of outliers can the different loss functions handle before their prediction and uncertainty deteriorates ?
+    \item \textbf{RQ2}: How does the proposed Generalized NLL loss compare to baseline uncertainty quantification methods across standard regression benchmarks in terms of predictive accuracy and uncertainty calibration?
     \item \textbf{RQ3}: How does the proposed loss function compare for a complex vision task of Key point estimation ?
-    \item \textbf{RQ4}: How can the uncertainty predicted by the keypoint estimation DNN be used for improving grasping and how do they compare with each other ?
+    \item \textbf{RQ4}: How can uncertainty-aware keypoint estimation improve robotic grasping performance, and what is the comparative analysis of different uncertainty estimation approaches for grasp success rates?
 \end{enumerate}
+
+\begin{figure}[t]
+	\includegraphics[width=\linewidth]{fig/noise_RMSE_IS_point_plot.png}	
+	\caption{\textbf{Breakaway Point estimation}: The change in RMSE and Interval Score with respect to outlier percentage in the data for 1D regression dataset.  
+	In the first row with clean data all the methods estimate the underlying data and the uncertainty accurately. With increasing outliers the uncertainty estimates are not correct. We observe that the Generalized NLL loss function has the least change in Interval Score with 50\% outliers.
+		\label{fig:breakawayExperiment}
+	}
+\end{figure}
+
+To evaluate a DNN's ability to estimate uncertainty accurately, we need metrics that separate the quality of uncertainty from the quality of predictions. Scoring rules are a group of metrics that assess uncertainty quality by assigning a numerical score based on both predictions and uncertainty \cite{gneiting2007strictly}.
+From the list of different Scoring rules we use the Interval Score scoring rule, which compares prediction intervals. Comparison of prediction intervals helps us to compare uncertainty of different distributions.
+The Interval Score rewards narrow predictions and penalizes predictions outside the interval. 
+%We set $\alpha$ of Interval score to 95\% for our experiments. 
+Based on the neural network's predicted value and uncertainty, we calculate the 95\% quantile prediction interval (l, u). This interval is then used to compute the Interval Score. 
+Because the Interval Score compares the 95\% quantile prediction interval, it's comparable across different distributions.
+
+\subsection{Empirical Breakaway Point }
+To answer RQ1 about the robustness of different loss functions to outliers, we conducted experiments using a 1D regression problem with increasing outliers in dataset. 
+The data is sine wave equation with Heteroscedastic noise.
+\begin{align}
+y &= \sin(x) + \epsilon, \quad x \in [0, 15] \\
+\epsilon &\sim \mathcal{N}(0, \sigma(x)^2) \\
+\sigma(x) &= 0.01 + \frac{|x - 5.0|}{10.0}
+\end{align}
+We employed a 4-layer neural network and systematically introduced outliers, ranging from 0\% to 50\% of the total data. The "breakaway point" was determined by observing the threshold at which a method's performance began to deteriorate significantly. This method provided insights into how well each loss function could withstand the presence of outlier data points and maintain accurate predictions and uncertainty. 
+For each experiment, we recorded the RMSE and Interval Score to gauge both prediction accuracy and uncertainty estimation quality. 
+
+Our findings as shown in \Cref{fig:breakawayExperiment} revealed that Gaussian and Ensemble methods exhibited similar levels of robustness, breaking down at approximately 10\% outlier contamination. However, Evidential learning, while demonstrating strong performance in uncertainty estimation, was less resilient to outliers in terms of prediction accuracy, breaking down at around 10\% as well.
+We observe how both fat-tailed loss functions, Laplace and Generalized were able to sustain performance even in the presence of 50\% outliers.  
+These results underscore the importance of comprehensive evaluation in assessing the robustness of uncertainty estimation models. 
+While a method might excel in one aspect, such as prediction accuracy, it may be susceptible to outliers in another, such as uncertainty estimation. Therefore, it is crucial to consider both factors when selecting a suitable method for a given application.
+
+\subsection{Benchmark Regression Tasks}
+To answer RQ2, we benchmark our uncertainty estimation method on real-world regression datasets.
+We selected 9 regression datasets from UCI \cite(ucimlrepo). 
+The datasets are trained with different loss functions using the same DNN model.  
+We conducted 20 experiments with random training and testing data splits. We used a fully connected neural network with Adam optimization and a learning rate of $5e^{-3}$. 
+Our results show that our proposed method performs the best compared to other methods in terms of Interval Score as show in \Cref{tab:ISTable}.
 
 \begin{table}[t]
 \centering
@@ -319,139 +392,227 @@ yacht & 0.37 & 0.33 & 0.47 & 0.43 & \textbf{0.32} \\
 \label{tab:ISTable}
 \end{table}
 
+
+%\subsection{Toy Dataset Benchmark}
+%To evaluate the efficacy of different loss functions in capturing predictive uncertainty in the presence of outliers, we constructed a synthetic toy dataset with controlled outlier characteristics. 
+%%The dataset consists of 1000 data points generated from the function $f(x) = \sin(x) + \epsilon$, where $\epsilon$ represents heteroscedastic noise. 
+%We deliberately contaminated 10\% of the data points with extreme values to serve as outliers.
+%All models shared identical neural network architectures, consisting of three hidden layers with 64 units each and ReLU activation functions. 
+%%Each model was trained to predict both the mean value and the uncertainty (parameterized as variance or scale parameter) for each input.
+%In addition to interval score metric mentioned above we employed additional two complementary metrics to assess each model's uncertainty estimation quality:
+%Correlation Coefficient : Measures the linear relationship between true uncertainty (empirical error) and predicted uncertainty. Higher values indicate better uncertainty calibration.
+%Continuous Ranked Probability Score (CRPS): Evaluates the integrated squared difference between the predicted cumulative distribution function and the empirical distribution. Lower values signify more accurate probabilistic predictions.
+
+
 \begin{figure}[t]
 	\includegraphics[width=\linewidth]{fig/RMSE_IS_Comb_point_uci.png}	
-	\caption{\textbf{Benchmark Regression Tasks}: RMSE and Interval Score box plot for comparison. The RMSE for all the methods are comparable and lie in same region. Interval score which predicts the quality of uncertainty estimation we can see that some methods the score degrades even though their RMSE score is good.
+	\caption{\textbf{Benchmark Regression Tasks}: RMSE and Interval Score box plot for comparison. The RMSE for all the methods are comparable and lie in same region. In Interval score plot we can see that some methods the score degrades even though their RMSE score is good.
 		\label{fig:benchmarkRegression}
 	}
 \end{figure}
 
+%\begin{table}[b]
+%\centering
+% \begin{tabular}[b]{l|c|c|c}
+%        Method & Correlation ($\uparrow$) & CRPS ($\downarrow$) & Interval Score ($\downarrow$)\\
+%        \hline
+%        Gaussian & 0.68 & 0.34 & 1.87\\
+%        Laplace & 0.97  & 0.28 & 1.5\\
+%        Cauchy & 0.96  & 0.27 & 1.45\\
+%        Evidential & 0.65 & 0.23 & 1.92\\
+%        \textbf{Generalized } & \textbf{0.98} & \textbf{0.25} & \textbf{1.41}\\
+%        \hline
+%    \end{tabular}
+%   \caption{Uncertainty estimation comparison on toy dataset containing both noise and outliers. Our proposed Generalized NLL loss function consistently outperforms most of the  baselines. }
+%\label{tab:toybenchmark}
+%\end{table}
+%The Generalized Normal loss function demonstrated superior performance across all evaluation metrics, achieving the highest correlation coefficient (0.98) between predicted and true uncertainty, along with the lowest CRPS (0.25) and Interval Score (1.41) as reported in \Cref{tab:toybenchmark}. 
+%This indicates its enhanced capability to adapt to the underlying noise distribution while remaining robust to outliers.
 
-\begin{figure}[b]
-	\includegraphics[width=\linewidth]{fig/noise_RMSE_IS_point_plot.png}	
-	\caption{\textbf{Breakaway Point estimation}: The change in RMSE and Interval Score with respect to outlier percentage in the data for 1D regression dataset.  
-		%In the first row with clean data all the methods estimate the underlying data and the uncertainty accurately. With increasing outliers the uncertainty estimates get mis alligned. You can observe the Laplace loss function is able to correctly estimate the underlying data even with 50\% outliers
-		\label{fig:breakawayExperiment}
-	}
-\end{figure}
-
-\subsection{Benchmark Regression Tasks}
-To answer RQ1, we benchmark our uncertainty estimation method on real-world regression datasets. 
-To evaluate a DNN's ability to estimate uncertainty accurately, we need metrics that separate the quality of uncertainty from the quality of predictions. Scoring rules are a group of metrics that assess uncertainty quality by assigning a numerical score based on both predictions and uncertainty \cite{gneiting2007strictly}.
-We use the Interval Score scoring rule, which compares prediction intervals.
-The Interval Score rewards narrow predictions and penalizes predictions outside the interval. We set $\alpha$ of Interval score to 95\% for our experiments. 
-%Based on the neural network's predicted mean and variance, we calculate the 95\% quantile prediction interval (l, u). This interval is then used to compute the Interval Score. 
-Because the Interval Score compares the 95\% quantile prediction interval, it's comparable across different distributions.
-We conducted 20 experiments with random training and testing data splits. We used a fully connected neural network with Adam optimization and a learning rate of $5e^{-3}$. Our results show that our proposed method performs the best as compared to other methods in terms of Interval Score as show in \Cref{tab:ISTable}.
+\subsection{Keypoint Estimation with Outliers}
+Having established benchmark comparison results, we now demonstrate the scalability of our generalized NLL learning approach by applying it to the complex, high-dimensional task of keypoint estimation. 
+Keypoint estimation is a computer vision task that involves identifying and locating specific points of interest within an image. 
+It's essentially a regression problem, where the goal is to predict the continuous x and y coordinates of each keypoint within the image. 
+%Its a challenging task due to the high-dimensional nature of the target output, with predictions required at every pixel. 
+Given the computational constraints of embedded robotic systems, we excluded Bayesian and ensemble methods from our comparison, as these approaches require excessive computational resources for real-time keypoint estimation during grasping tasks.
+In this experiment, we demonstrate the applicability of our method to learn from outliers by adding additional outliers to our training data. 
 
 
-
-\begin{figure*}[htbp!]
+\begin{figure*}[t]
 	\centering
 	\igwc{0.31}{fig/cornell_data.png}{\textbf{A}}{-2.5}{1.7}
-	\igwc{0.32}{fig/keypoint-RMSE.png}{\textbf{B}}{-1.9}{1.7}
-	\igwc{0.31}{fig/keypoint-IS.png}{\textbf{C}}{-2.05}{1.7}
+	\igwc{0.32}{fig/RMSE_Adv_box_Keypoint.pdf}{\textbf{B}}{-1.9}{1.7}
+	\igwc{0.31}{fig/Interval_score_Adv_box_Keypoint.pdf}{\textbf{C}}{-2.05}{1.7}
 	\caption{\textbf{Keypoint Estimation} Trained on Cornell Grasp Dataset. \textbf{(A)} Example images from dataset.\textbf{ (B)} RMSE comparison plot \textbf{(C)} Interval score plot. Genralized NLL trained model have the lowest RMSE and Interval scores as compared to other uncertainty estimation methods.}
 	\label{fig:keypointrsults}
 \end{figure*}
 
-\subsection{Empirical Breakaway Point }
-To answer RQ2 about the robustness of different loss functions to outliers, we conducted experiments using a 1D regression problem with increasing outliers in dataset. We employed a 4-layer neural network and systematically introduced outliers, ranging from 0\% to 50\% of the total data. The "breakaway point" was determined by observing the threshold at which a method's performance began to deteriorate significantly. This method provided insights into how well each loss function could withstand the presence of outlier data points and maintain accurate predictions and uncertainty. 
-For each experiment, we recorded the RMSE and Interval Score to gauge both prediction accuracy and uncertainty estimation quality. 
 
-Our findings as shown in \Cref{fig:breakawayExperiment} revealed that Gaussian and Ensemble methods exhibited similar levels of robustness, breaking down at approximately 10\% outlier contamination. However, Evidential learning, while demonstrating strong performance in uncertainty estimation, was less resilient to outliers in terms of prediction accuracy, breaking down at around 10\% as well.
-We observe how both fat tailed loss function Laplace and Generalized was able to sustain performance even in the presence of 50\% outliers.  
-These results underscore the importance of comprehensive evaluation in assessing the robustness of uncertainty estimation models. While a method might excel in one aspect, such as uncertainty estimation, it may be susceptible to outliers in another, such as prediction accuracy. Therefore, it is crucial to consider both factors when selecting a suitable method for a given application.
-
-\begin{table}[b]
-\centering
-\begin{tabular}{ c|c|c }
-Dataset & RMSE & Interval Score \\
- \hline
-Gaussian & 0.0469 & 1.7960  \\
-Laplace  & 0.0459 & 0.4348   \\
-Ensemble  &  0.0477 & 0.9202  \\
-Evidential  & 0.0729 & 1.1217  \\
-Generalized (Ours) & \textbf{0.0411} & \textbf{0.4331}  \\
-\hline
-\end{tabular}
-\caption{RMSE and Interval Score Result table for Cornell Grasp dataset}
-\label{tab:Cornel}
-
-\end{table}
-
-\subsection{Keypoint Estimation}
-Having established benchmark comparison results, we now demonstrate the scalability of our generalized NLL learning approach by applying it to the complex, high-dimensional task of keypoint estimation. 
-Keypoint estimation is a computer vision task that involves identifying and locating specific points of interest within an image. It's essentially a regression problem, where the goal is to predict the continuous x and y coordinates of each keypoint within the image. Its a challenging task due to the high-dimensional nature of the target output, with predictions required at every pixel. 
-
-\textit{Cornell grasp dataset and Data Augmentation}
-We train our model using the Cornell grasp dataset \cite{lenz2015deep}. The Cornell Grasp Dataset is a collection of real-world images and corresponding annotations for robotic grasping tasks. It contains a diverse range of objects, including everyday items like cups, bottles, tools, and toys. Each image is paired with annotations that specify the most suitable pinch grasp points. The Dataset contains around 1K RGB-D images of 240 different objects. \Cref{fig:keypointrsults} A shows a sample of training images from the dataset. Each image has dimension of 640 × 480px and is annotated with multiple potential grasp points, typically ranging from 1 to 10 per image. 
+\textit{Cornell grasp dataset}
+We train our model using the Cornell grasp dataset \cite{lenz2015deep}. The Cornell Grasp Dataset is a collection of real-world images and corresponding annotations for robotic grasping tasks. It contains a diverse range of objects, including everyday items such as cups, bottles, tools, and toys. Each image is paired with annotations that specify the most suitable pinch grasp points. The Dataset contains around 1K RGB-D images of 240 different objects. \Cref{fig:keypointrsults} A shows a sample of training images from the dataset. Each image has dimension of 640 × 480px and is annotated with multiple potential grasp points, typically ranging from 1 to 10 per image. 
 To address the limited size of the dataset, we implemented data augmentation techniques to increase its diversity during training.
 Data augmentation methods of random rotations between 0 and 360 degrees were applied, along with random translations in the x and y directions of up to 50 pixels. 
-%These augmentations helped improve the model's generalization capabilities by exposing it to a wider range of variations in the data.
-
-\begin{figure*}[t]
-    \centering
-    \subfigure[]
-    {
-        \includegraphics[width=0.2\linewidth]{fig/kinova.png}
-    }
-    \qquad
-     \centering
-     \subfigure[]
-    {
-    \includegraphics[width=0.3\linewidth]{fig/objects.png}
-    }
-    \qquad
-    \subfigure[]
-    {
-    \begin{tabular}[b]{l|c}
-        Method & Success Rate ($\uparrow$)\\
-        \hline
-        Gaussian & 36.2 $\%$\\
-        Laplace & 58.3 $\%$\\
-        Cauchy & 33.1 $\%$\\
-        Evidential & 31.9 $\%$\\
-        \textbf{Generalized (ours)} & \textbf{61.5} $\%$\\
-        \hline
-    \end{tabular}
-    \captionlistentry[table]{A table beside a figure}
-    \label{tableGrasp}
-    }
-    %\captionsetup{labelformat=andtable}
-    \caption{Robot grasp benchmark: (a) Experimental setup consisting of a kinova arm with intel realsense camera on its tooltip with one object placed in front of robot for grasping. (b) Novel 10 objects selected for the experiments (c) Table with results of the benchmark }
-\end{figure*}
+These augmentations helped improve the model's generalization capabilities by exposing it to a wider range of variations in the data.
+To demonstrate the capability of our method to learn from outliers we introduced outliers in our training data. For simulating outliers we corrupted 10\% of the images true labels and replaced it with random points. 
 \textit{Architecture:} 
 We utilized a ResNet18 architecture \cite{he2016deep} as our architecture. The neural network's output is an 8x2 matrix, representing 8 keypoints with x and y coordinates. For Gaussian and Laplace networks, the output expands to 8x4, adding two dimensions for the scale parameter. Evidential networks have an 8x8 output, with three additional outputs for each keypoint. Generalized NLL networks output 8x6.  The hyperparameters used are Adam optimization, learning rate of 1e-3, batch size of 32, and 200 training epochs. 
+
 \textit{Training Schedule:}
 The network was trained end-to-end using Adam as the optimizer with a learning rate of 1e-3, weight decay of 0.001, a momentum factor of 0.9, and momentum enabled. We used a batch size of 32 and trained the nodels with each loss function for 200 epochs.
 
+
 \textit{Quantitative Results:}
 \Cref{tab:Cornel} presents the results on the Cornell grasp dataset. The detailed box plot of the RMSE and Interval scores are plotted in \Cref{fig:keypointrsults} B and C respectively. Our loss function achieves state-of-the-art accuracy compared to other NLL loss functions. Notably, our Generalized NLL method also outperforms other NLL methods in terms of Interval Score. 
-%The box plot of the RMSE and Interval scores are plotted in \Cref{fig:keypointrsults} B and C respectively. 
-This shows that our Generalized NLL loss function is able to adjust the shape of the loss function based on the outliers present in the data and is able to adjust. 
+The box plot of the RMSE and Interval scores are plotted in \Cref{fig:keypointrsults} B and C respectively. 
+The Generalized NLL loss function is able to adjust the shape of the loss function based on the outliers present in the data and is able to adjust. 
 %This also demonstrates that Generalized NLL can be applied to high dimensional dataset task and performs in a comparative manner. 
 
 
+\begin{figure*}[t]
+	\centering
+	\subfigure[]
+	{
+		\includegraphics[width=0.2\linewidth]{fig/calib_eps-0.0_ood-False.pdf}
+	}
+	\qquad
+	\centering
+	\subfigure[]
+	{
+		\includegraphics[width=0.3\linewidth]{fig/Entropy_Adv_box_Keypoint.pdf}
+	}
+	\qquad
+	\subfigure[]
+	{
+		\includegraphics[width=0.3\linewidth]{fig/ood_Entropy_box.pdf}
+	}
+	%\captionsetup{labelformat=andtable}
+	\caption{Robot grasp benchmark: (a) Experimental setup consisting of a kinova arm with intel realsense camera on its tooltip with one object placed in front of robot for grasping. (b) Novel 10 objects selected for the experiments (c) Table with results of the benchmark }
+		\label{fig:ablationresults}
+\end{figure*}
+
+\subsection{Impact of Outliers}
+To study outlier impact on training data, we report RMSE and Interval Score for models trained with different uncertainty estimation methods. We trained models on two datasets: one clean and one containing outliers.
+Box plots of RMSE and Interval scores are shown in \Cref{fig:keypointrsults} panels B and C. Our proposed Generalized NLL method outperforms other NLL methods for both metrics on clean and outlier datasets.
+The major takeaway from the results is that the RMSE and Interval score difference between clean and outliers is minimum for our proposed loss function.
+Outliers most severely impact the Gaussian loss function, while Laplace and Generalized loss functions show less degradation. 
+The fat tails of the Laplace distribution and the adaptability of the Generalized Gaussian enable their corresponding loss functions to better handle outliers during training.
+
+
+\subsection{Uncertainty Calibration}
+We evaluate uncertainty calibration using calibration curves that plot expected confidence against observed confidence. 
+For well-calibrated methods, this curve should follow the diagonal line y = x.
+Expected confidence is computed based on prediction error: samples with minimal error should exhibit maximum confidence, while samples with high error should show low confidence.
+\Cref{fig:ablationresults} panel (a) presents calibration curves for three methods. The Gaussian method demonstrates poor calibration, underestimating confidence in low-confidence regions while overestimating it in high-confidence regions. The Laplace method shows well-calibrated predictions. Our proposed Generalized loss function achieves the best overall calibration performance among all methods.
+
+\subsection{Adversarial Attack Detection}
+We evaluate the trained models on adversarial datasets generated using the Fast Gradient Sign Method (FGSM) \Cite{goodfellow_2015} with varying adversarial perturbation coefficients ($\epsilon$). Adversarial images are synthetically created inputs with intentional feature perturbations designed to cause model misclassification.
+\Cref{fig:ablationresults} panel (b) presents adversarial attack results by plotting the entropy for different loss function trained models across different $\epsilon$ values. 
+The desired behavior is increasing entropy with higher $\epsilon$ levels, indicating greater uncertainty for more severely perturbed adversarial inputs.
+All loss functions demonstrate increasing entropy as adversarial perturbation strength increases. 
+However, the Gaussian loss function shows the smallest uncertainty increase, while both Laplace and Generalized loss functions exhibit more pronounced uncertainty growth. 
+This suggests that models trained with Laplace and Generalized loss functions can better detect adversarial attacks by appropriately increasing their uncertainty estimates.
+
+\subsection{Out-of-Distribution Detection}
+We evaluate trained models on a near-OOD dataset using background images without objects from the Cornell grasp dataset as OOD samples. 
+Effective OOD detection requires models to exhibit significantly higher uncertainty for OOD predictions compared to in-distribution (ID) data, with statistically distinguishable uncertainty distributions.
+This clear statistical separation enables threshold-based decision making for prediction reliability. 
+\Cref{fig:ablationresults} panel (c) presents interquartile box plots of entropy distributions for ID and OOD samples.
+Results demonstrate that both Laplace and Generalized loss functions achieve strong statistical separation between ID and OOD data distributions. 
+In contrast, the Gaussian loss function shows minimal separation capability, indicating poor OOD detection performance. 
+The pronounced uncertainty differences produced by Laplace and Generalized loss function facilitate reliable threshold setting for automated decision making.
+
 \subsection{Uncertainty Estimation Based Grasping}
-In order to study RQ4, we conducted an experiment where the uncertainty can be used on a robotics task and we can benchmark the different lo function on robotics task. We deployed the keypoint estimation DNN models learned in the previous section on a robot arm for object grasping using antipodal grasp. We leverage the predicted uncertainties, into developing a robust grasp selection algorithm. This algorithm chooses the optimal keypoint for physical grasping by selecting a single best keypoint with least uncertainty from the 8 keypoints predicted by the model for each object.
+In order to study RQ4, we conducted an experiment in which uncertainty can be used on a robotics task and we can benchmark the different loss function on robotics task. We deployed the keypoint estimation DNN models learned in the previous section on a robot arm for object grasping using antipodal grasp. We leverage the predicted uncertainties, into developing a robust grasp selection algorithm. This algorithm chooses the optimal keypoint for physical grasping by selecting the keypoint with the least uncertainty from the 8 keypoints predicted by the model for each object.
 
 In this experiment, we used a Kinova robot arm equipped with a Robotiq gripper end-effector for object grasping. Ten objects were selected from the Cornell Grasp dataset, as illustrated in Figure . An Intel Realsense camera is available on the robot's end-effector. The objects were arranged on a horizontal surface with a white background in a region with optimal reachability.
-We use the grasp protocol as recommended in previous research by \cite{bekiroglu2019benchmarking}. Our experiment employs a top-down grasping approach for single objects on a table. Each object is positioned at a predetermined location and orientation relative to the robot. The keypoint estimation algorithm identifies potential grasping points, and the grasp selection algorithm chooses the most suitable keypoint. The grasp planner then converts this keypoint into 3D world coordinates and commands the robot arm to execute the grasp. This process is repeated N times for comprehensive evaluation.
+We use the grasp protocol as recommended in previous research by \cite{bekiroglu2019benchmarking}. 
+Our experiment employs a top-down grasping approach for single objects on a table. Each object is positioned at a predetermined location and orientation relative to the robot. 
+The keypoint estimation algorithm identifies potential grasping points, and the grasp selection algorithm chooses the most suitable keypoint. The grasp planner then converts this keypoint into 3D world coordinates and commands the robot arm to execute the grasp. This process is repeated N times for comprehensive evaluation.
 As outlined in \cite{bekiroglu2019benchmarking}, the results can be evaluated using the metric $s/a$, where $s$ represents the count of successful grasps and $a$ equals $2 * N$, with $N$ being the number of grasp attempts per object. The factor of 2 accounts for the consideration of two different object orientations: vertical and horizontal. Grasp failures are identified when the gripper displaces the object, when the object slides or moves during grasping or lifting, or when the grasped item is dropped. This experimental setup is valuable for determining the optimal grasping pose using uncertainty estimation methods and can be evaluated based on the aforementioned criteria.
 
 A final success rate, calculated as the normalized average across all trials and poses is reported in \Cref{tableGrasp} . 
 We observe that the DNN trained with Generalized NLL performs the best with $61.5 \%$ success rate in grasping.
+%\begin{table}[b]
+%	\centering
+%	\begin{tabular}{ c|c|c }
+%		Dataset & RMSE($\downarrow$) & Interval Score ($\downarrow$)\\
+%		\hline
+%		Gaussian & 0.0469 & 1.7960  \\
+%		Laplace  & 0.0459 & 0.4348   \\
+%		%Ensemble  &  0.0477 & 0.9202  \\
+%		%Evidential  & 0.0729 & 1.1217  \\
+%		Generalized (Ours) & \textbf{0.0411} & \textbf{0.4331}  \\
+%		\hline
+%	\end{tabular}
+%	\caption{RMSE and Interval Score Result table for Cornell Grasp dataset containing outliers}
+%	\label{tab:Cornel}
+%	
+%\end{table}
 
-  
-\section{DISCUSSION}
+
+\begin{figure*}[t]
+	\centering
+	\subfigure[]
+	{
+		\includegraphics[width=0.2\linewidth]{fig/kinova.png}
+	}
+	\qquad
+	\centering
+	\subfigure[]
+	{
+		\includegraphics[width=0.3\linewidth]{fig/objects.png}
+	}
+	\qquad
+	\subfigure[]
+	{
+		\begin{tabular}[b]{l|c}
+			Method & Success Rate ($\uparrow$)\\
+			\hline
+			Gaussian & 36.2 $\%$\\
+			Laplace & 58.3 $\%$\\
+			Cauchy & 33.1 $\%$\\
+			Evidential & 31.9 $\%$\\
+			\textbf{Generalized (ours)} & \textbf{61.5} $\%$\\
+			\hline
+		\end{tabular}
+		\captionlistentry[table]{A table beside a figure}
+		\label{tableGrasp}
+	}
+	%\captionsetup{labelformat=andtable}
+	\caption{Robot grasp benchmark: (a) Experimental setup consisting of a kinova arm with intel realsense camera on its tooltip with one object placed in front of robot for grasping. (b) Novel 10 objects selected for the experiments (c) Table with results of the benchmark }
+\end{figure*}
+
+
+\section{Related Work}
+\label{sec:relatedwork}
+\subsubsection*{{\textbf{Uncertainty Estimation}}}
+In \cite{nix1994estimating} a novel approach was introduced for uncertainty estimation for neural networks by modeling outputs as Gaussian distributions and employing a negative log likelihood of the distribution as the loss function. This  method demonstrated the neural network's ability to learn both predictions and uncertainty. In \cite{blundell2015weight}, DNN uncertainty estimation was achieved by representing network weights with distributions. \cite{gal_dropout_2016} proposed a sampling based techniques using dropouts and multiple forward passes and capture the differences in the different passes as uncertainty.
+Ensemble methods, as exemplified by \cite{lakshminarayanan_simple_2016, dusenberry2020efficient} and \cite{wen2020batchensemble} currently dominate state-of-the-art uncertainty estimation. These methods leverage multiple models within a single framework to provide robust uncertainty estimates. Despite their effectiveness, ensemble methods generally necessitate multiple forward passes, limiting their applicability in real-time or resource-constrained scenarios.
+\subsubsection*{{\textbf{Single Inference Uncertainty Estimation}}}
+Several methods can estimate uncertainty using a single inference. These include:
+\begin{inparaenum}
+    \item Replacing the loss function with NLL of statistical distribution \cite{malinin2018predictive, sensoy_evidential_2018, amini_deep_2019, nair_laplace_2O22},
+    \item Computing the closed-form posterior for the output layer \cite{Riquelme2018Deep, SnoekRSKSSPPA15},
+    \item Changing the output layer \cite{calandra2016manifold, tagasovska2019single}, 
+    \item Using spectral normalization \cite{LiuLPTBL20} and
+    \item Applying a two-sided gradient penalty  \cite{van2020uncertainty}
+\end{inparaenum}
+
+\subsubsection*{{\textbf{Robust Uncertainty Estimation}}}
+Robust training in the presence of outliers is a classic statistical problem often addressed using M-estimators \cite{huber2004robust}. For DNN, \cite{barron2019general} proposed a generalized M-estimator loss function that uses the negative log of the density function to improve robustness during training. \cite{lathuiliere2018deepgum} introduced a Gaussian-uniform mixture model as a loss function that can continuously adapt to outliers in the data. In \cite{nair_laplace_2O22} studied the usage of Laplace NLL as loss function for improving robustness to outliers. 
+In this work we work on a extension of this work which generalizes different fat tailed distribution based NLL loss function thus further improving robustness capability of DNN.
+
+\section{Discussion}
 
 We introduced a generalized loss function that can adapt its shape to outliers in the dataset. This eliminates the need for researchers to manually select a suitable loss function, as the model automatically adjusts to find the appropriate loss function and corresponding distribution.
-To evaluate the performance of our DNN model trained with this loss function, we tested it on a datasets with varying percentages of outliers. Our results demonstrated that the model trained with generalized NLL loss function is robust to outliers, with minimal impact on both performance and estimated uncertainty.
+To evaluate the performance of our DNN model trained with this loss function, we tested it on a datasets with varying percentages of outliers. 
+Our results demonstrated that the model trained with generalized NLL loss function is robust to outliers, with minimal impact on both performance and estimated uncertainty.
 We also benchmarked our loss function on various regression benchmarks and found it to achieve state-of-the-art with respect to uncertainty estimation. Additionally, we applied it to the high-dimensional task of keypoint estimation. Furthermore, we demonstrated the practical utility of the predicted uncertainty in a robotics task: robot grasping.
 
-While our work provides a proof of concept for using this loss function in DNN training, further research is needed to explore its runtime robustness. Adversarial testing and out-of-distribution detection are areas that warrant investigation. We hope that these efforts will contribute to the development of stable uncertainty estimation methods that are resilient to outliers.
-\addtolength{\textheight}{-12cm}   % This command serves to balance the column lengths
+Our Generalized Gaussian distribution NLL approach estimates aleatoric uncertainty, which represents the inherent noise learned from training data, but does not separate epistemic and aleatoric components. The model output corresponds to aleatoric uncertainty—the irreducible uncertainty present in the data itself. For robotics applications, this aleatoric uncertainty is sufficient for probabilistic reasoning frameworks such as factor graphs, which can directly incorporate these uncertainty estimates as measurement noise in their optimization processes. This makes the approach well-suited for robotic perception and decision-making tasks where measurement uncertainty modeling is critical.
+%Adversarial testing and out-of-distribution detection are areas that warrant investigation. 
+We hope that these efforts will contribute to the development of stable uncertainty estimation methods that are resilient to outliers.
+%\addtolength{\textheight}{-12cm}   % This command serves to balance the column lengths
                                   % on the last page of the document manually. It shortens
                                   % the textheight of the last page by a suitable amount.
                                   % This command does not take effect until the next page
@@ -467,77 +628,10 @@ scholarship from the Graduate Institute of the Bonn-Rhein-Sieg University.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\bibliographystyle{IEEEtran}
-\bibliography{root}
+%\bibliographystyle{IEEEtran}
+%\bibliography{root.bib}
+\printbibliography
 
-
-\section*{SUPPLEMENTARY MATERIALS}
-\subsubsection{Interval Score} uses the prediction interval, with lower and upper endpoints represented by predictive quantiles at level $\frac{\alpha}{2}$ and $1 - \frac{\alpha}{2}$. The Interval Score is defined as :
-\begin{equation}
-S_\alpha^{int} (l,u;y) = (u - l) +\frac{2}{\alpha}(l-y)\mathbf{1}\{y<l\} + \frac{2}{\alpha}(y-u)\mathbf{1}\{y>u\}
-\end{equation}
-
-
-\subsubsection{Robot grasping experiment individual experiment }
-
-Experiment results of individual obejcts 
-\begin{table}[htbp]
-	\caption{Result table from grasping experiment}
-	\centering
-	\begin{tabular}{|l|c|c|c|c|c|c|c|c|c|c|}
-		\hline
-		
-		 & \multicolumn{2}{c|}{\textbf{Generalized}} & \multicolumn{2}{c|}{\textbf{Gaussian}} & \multicolumn{2}{c|}{\textbf{Laplace}} & \multicolumn{2}{c|}{\textbf{Cauchy}} & \multicolumn{2}{c|}{\textbf{Evidential}} \\ \cline{2-11} 
-		
-		& P1 & P2 & P1 & P2 & P1 & P2 & P1 & P2 & P1 & P2 \\ \hline
-		Torch & 9 & 5 & 6 & 2 & 8 & 5 & 5 & 0 & 4 & 0 \\ \hline
-		Marker & 9 & 4 & 7 & 1 & 7 & 2 & 5 & 1 & 5 & 1 \\ \hline
-		Mouse & 4 & 3 & 2 & 2 & 3 & 2 & 2 & 3 & 4 & 3 \\ \hline
-		Brush & 5 & 4 & 4 & 3 & 6 & 4 & 3 & 1 & 3 & 0 \\ \hline
-		Stapler & 6 & 7 & 1 & 4 & 3 & 5 & 1 & 3 & 1 & 2 \\ \hline
-		Paste & 8 & 8 & 4 & 4 & 8 & 7 & 5 & 5 & 4 & 3 \\ \hline
-		Cube & 6 & 6 & 5 & 5 & 6 & 6 & 5 & 5 & 5 & 5 \\ \hline
-		Duster & 6 & 5 & 4 & 2 & 7 & 5 & 2 & 1 & 3 & 0 \\ \hline
-		Box & 9 & 4 & 7 & 3 & 9 & 3 & 7 & 2 & 7 & 1 \\ \hline
-		Allen & 10 & 5 & 4 & 2 & 9 & 2 & 8 & 2 & 8 & 3 \\ \hline
-		
-	\end{tabular}
-	
-\end{table}
-
-
-\subsubsection*{LIMITATIONS}
-
-The proposed loss function is not convex in general. 
-To demonstrate non-convexity, consider the following scenario:
-Fixed $\alpha$, Let $\alpha = 1$.
-Varying $r$, Choose two points $r1 = 1$ and $r2 = -1$.
-Convexity condition: A function f is convex if for all $r1$, $r2$ and $\lambda \in [0, 1]$:
-\begin{equation*}
-    f(\lambda x1 + (1-\lambda) x2) \leq \lambda f(x1) + (1-\lambda)L(x2)
-\end{equation*}
-Evaluating the loss function:
-\begin{equation*}
-L(r1) = 1 - log(\beta) + log(\Gamma(1/\beta))
-\end{equation*}
-\begin{equation*}
-L(r2) = 1 - log(\beta) + log(\Gamma(1/\beta)) \\
-\end{equation*}
-\begin{equation*}
-L(\lambda r1 + (1-\lambda)r2) = | \lambda - (1-\lambda)|^\beta - log(\beta) + log(\Gamma(1/\beta))
-\end{equation*}
-Checking the convexity condition:
-For $\lambda$ = 0.5:
-\begin{equation*}
-   L(0.5r1 + 0.5r2) = 0 - log(\beta) + log(\Gamma(1/\beta)) 
-\end{equation*}
-\begin{multline*}
-\lambda L(r1) + (1-\lambda)L(r2) \\ 
-0.5(1 - log(\beta) + log(\Gamma(1/\beta))) \\ + 0.5(1 - log(\beta) + log(\Gamma(1/\beta))) = 1 - log(\beta) + log(\Gamma(1/\beta))
-\end{multline*}
-The convexity condition is not satisfied for all $\lambda \in [0, 1]$. Therefore, the loss function is not convex.
-While the loss function is not globally convex, it might be locally convex under certain conditions. However, the general form presented here does not guarantee convexity. 
-We overcome this limitation by adding a software ode by clamping the loss to the very small number as possible in the cpu. This ensures that the residual never becomes zero and thus 
 
 
 \end{document}

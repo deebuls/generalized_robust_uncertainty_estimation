@@ -1,0 +1,44 @@
+Reviewer 1 of IROS 2025 submission 2656
+
+Comments to the author
+======================
+
+Negative log-likelihood often struggles with outliers, and
+relying on sampling increases inference time. According to
+the paper, the proposed algorithm can choose a suitable
+distribution depending on the presence of outliers, which
+helps address this issue. The suggestion and limitation are
+listed below:
+
+1. the comparison with other algorithms seems a bit limited
+— it only considers a few different distributions. It's
+pretty intuitive that combining multiple distributions
+could better handle abnormalities in data compared to using
+just a single one. So, it raises the question: is the
+baseline comparison really fair in this case?
+
+2. Also, it would be nice to see if the method is more
+task-agnostic.
+
+3. The experiments show that the algorithm can handle data
+with outliers. For example, the first experiment suggests
+that the proposed method works even with up to 50% outlier
+contamination. But looking at Figure 3, it's hard to
+clearly see the performance difference between the
+generalized method and the Laplace baseline.
+
+4. In the key-point detection experiment, ResNet-18 already
+has dropout layers, which provide some uncertainty
+handling. The RMSE difference between the proposed method
+and the baselines is within 0.02, which doesn’t seem very
+significant.
+
+5. It's great that the paper includes a robot grasping
+experiment. However, it’s hard to tell how much this
+experiment adds, since it appears to just use motion
+planning based on detected keypoints. Uncertainty could
+also exist in the trajectory itself, not just at the
+keypoint level. It would be stronger if the authors used
+the proposed loss to train an actual grasping policy. That
+would better demonstrate how uncertainty is handled both in
+keypoint detection and in the trajectory or policy space.

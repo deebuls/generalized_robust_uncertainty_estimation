@@ -1,0 +1,19 @@
+[0] Config.pm:304> INFO - This is Biber 2.14 (beta)
+[0] Config.pm:307> INFO - Logfile is 'root.blg'
+[46] biber:322> INFO - === Sun Sep  7, 2025, 22:13:38
+[54] Biber.pm:415> INFO - Reading 'root.bcf'
+[91] Biber.pm:943> INFO - Found 31 citekeys in bib section 0
+[97] Biber.pm:4256> INFO - Processing section 0
+[98] Utils.pm:75> INFO - Globbing data source 'root.bib'
+[98] Utils.pm:91> INFO - Globbed data source 'root.bib' to root.bib
+[103] Biber.pm:4455> INFO - Looking for bibtex format file 'root.bib' for section 0
+[105] bibtex.pm:1653> INFO - LaTeX decoding ...
+[146] bibtex.pm:1471> INFO - Found BibTeX data source 'root.bib'
+[277] Utils.pm:293> WARN - I didn't find a database entry for '(' (section 0)
+[294] UCollate.pm:68> INFO - Overriding locale 'en-US' defaults 'normalization = NFD' with 'normalization = prenormalized'
+[294] UCollate.pm:68> INFO - Overriding locale 'en-US' defaults 'variable = shifted' with 'variable = non-ignorable'
+[294] Biber.pm:4084> INFO - Sorting list 'none/global//global/global' of type 'entry' with template 'none' and locale 'en-US'
+[294] Biber.pm:4090> INFO - No sort tailoring available for locale 'en-US'
+[304] bbl.pm:652> INFO - Writing 'root.bbl' with encoding 'UTF-8'
+[317] bbl.pm:755> INFO - Output to root.bbl
+[317] Biber.pm:128> INFO - WARNINGS: 1
