@@ -23,11 +23,12 @@ from models import KeypointResnetModel
 from visualize import KeypointVisualizer
 from loss import LaplaceNLLLoss
 from loss import GeneralGaussianNLLLoss
+from loss import EvidentialRegression
 
 
 IMG_SIZE = 256
 CHECKPOINT_PTH = 'resnet.pth'
-LOSS_CHOICES = ['gaussian', 'laplace', 'generalized_gaussian']
+LOSS_CHOICES = ['gaussian', 'laplace', 'generalized_gaussian', 'evidential']
 
 # Your existing KeypointDataset class
 # Assuming a simple model for demonstration
@@ -88,6 +89,8 @@ def train_model(loss_function, note, with_outliers=False):
     # Model, loss function, and optimizer
     if loss_function == 'generalized_gaussian':
         model = KeypointResnetModel(additional_output=True).to(device)
+    elif loss_function == 'evidential':
+        model = KeypointResnetModel(is_evidential=True).to(device)
     else:
         model = KeypointResnetModel().to(device)
    
@@ -101,6 +104,8 @@ def train_model(loss_function, note, with_outliers=False):
         criterion = LaplaceNLLLoss
     elif loss_function == 'generalized_gaussian':
         criterion = GeneralGaussianNLLLoss
+    elif loss_function == 'evidential':
+        criterion = EvidentialRegression
 
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
     # Pass only the trainable parameters to the optimizer
@@ -142,6 +147,9 @@ def train_model(loss_function, note, with_outliers=False):
             if loss_function == 'generalized_gaussian':
                 pred_mean, pred_scale, pred_beta = model(images)
                 loss = criterion(pred_mean, keypoints, pred_scale, pred_beta)   
+            elif loss_function == 'evidential':
+                pred_mean, pred_scale, pred_alpha, pred_beta = model(images)
+                loss = criterion(pred_mean, keypoints, pred_scale, pred_alpha, pred_beta, coeff=0.01)   
             else:
                 pred_mean, pred_scale = model(images)
                 loss = criterion(pred_mean, keypoints, pred_scale)   
@@ -218,22 +226,28 @@ def train_model(loss_function, note, with_outliers=False):
         images = images.to(device)
         if loss_function == 'generalized_gaussian':
             pred_mean, pred_scale, pred_beta = model(images)
+        elif loss_function == 'evidential':
+            pred_mean, pred_scale, pred_alpha, pred_beta = model(images)
         else:
             pred_mean, pred_scale = model(images)
 
     # Reshape predicted keypoints to match the expected format (batch_size, num_keypoints, 2)
-    pred_mean = pred_mean.view(-1, 4, 2)
-    pred_scale = pred_scale.view(-1, 4, 2)
     if loss_function == 'generalized_gaussian':
         pred_beta = pred_beta.view(-1, 4, 2)
         # The batch size and the middle dimension remain the same.
         pred_scale = torch.cat((pred_scale, pred_beta), dim=2)
-        
+    elif loss_function == 'evidential':
+        pred_scale = pred_beta/(pred_scale*(pred_alpha-1)) # variance
+
+    pred_mean = pred_mean.view(-1, 4, 2)
+    pred_scale = pred_scale.view(-1, 4, 2)
     visualizer = KeypointVisualizer(distribution=loss_function, img_size=IMG_SIZE)
     visualizer.visualize_batch(
         images.cpu(), keypoints, pred_mean.cpu(), 
-        pred_scale.cpu(), show_contours=False
+        pred_scale.cpu(), show_contours=False, figname="_with_outliers_"+str(with_outliers)
     )
+    
+
 
 def val_data(dataloader, model, epoch, writer, device, loss_function, len_dataset):
     # Set the model to evaluation mode
@@ -247,6 +261,8 @@ def val_data(dataloader, model, epoch, writer, device, loss_function, len_datase
         with torch.no_grad():
             if loss_function == 'generalized_gaussian':
                 pred_mean, pred_scale, pred_beta = model(images)
+            elif loss_function == 'evidential':
+                pred_mean, pred_scale, pred_alpha, pred_beta = model(images)
             else:
                 pred_mean, pred_scale = model(images)
         
@@ -283,6 +299,8 @@ def load_device_model_data(test_ood: bool, loss_function: str, with_outliers: bo
     # Model, loss function, and optimizer
     if loss_function == 'generalized_gaussian':
         model = KeypointResnetModel(additional_output=True).to(device)
+    elif loss_function == 'evidential':
+        model = KeypointResnetModel(is_evidential=True).to(device)
     else:
         model = KeypointResnetModel().to(device)
    
@@ -306,23 +324,26 @@ def test_near_ood(loss_function, with_outliers):
         images = images.to(device)
         if loss_function == 'generalized_gaussian':
             pred_mean, pred_scale, pred_beta = model(images)
+        elif loss_function == 'evidential':
+            pred_mean, pred_scale, pred_alpha, pred_beta = model(images)
         else:
             pred_mean, pred_scale = model(images)
 
     # Reshape predicted keypoints to match the expected format (batch_size, num_keypoints, 2)
-    pred_mean = pred_mean.view(-1, 4, 2)
-    pred_scale = pred_scale.view(-1, 4, 2)
-    print ("pred_scale ", pred_scale)
     if loss_function == 'generalized_gaussian':
         pred_beta = pred_beta.view(-1, 4, 2)
         # The batch size and the middle dimension remain the same.
         pred_scale = torch.cat((pred_scale, pred_beta), dim=2)
+    elif loss_function == 'evidential':
+        pred_scale = pred_beta/(pred_scale*(pred_alpha-1)) #variance
         
+    pred_mean = pred_mean.view(-1, 4, 2)
+    pred_scale = pred_scale.view(-1, 4, 2)
     print (pred_scale)
     visualizer = KeypointVisualizer(distribution=loss_function, img_size=IMG_SIZE)
     visualizer.visualize_batch(
         images.cpu(), keypoints, pred_mean.cpu(), 
-        pred_scale.cpu(), show_contours=False, figname='OOD'
+        pred_scale.cpu(), show_contours=False, figname="_with_outliers_"+str(with_outliers)+"_OOD"
     )
     
 def add_outliers(keypoint, percentage):
@@ -347,18 +368,6 @@ def add_outliers(keypoint, percentage):
     
     return keypoint
 
-def test_adversarial_attack(loss_function):
-    device, model, dataloader = load_device_model_data(test_ood=False)
-    epsilons = [0, .05, .1, .15, .2, .25, .3]
-    accuracies = []
-    examples = []
-
-    # Run test for each epsilon
-    for eps in epsilons:
-        acc, ex = test(model, device, dataloader, eps)
-        accuracies.append(acc)
-        examples.append(ex)
-
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("-l", "--loss", type=str, choices=LOSS_CHOICES,
@@ -376,5 +385,4 @@ if __name__ == '__main__':
 
     torch.cuda.empty_cache() 
     test_near_ood(loss_function=args.loss, with_outliers=args.with_outliers)
-    #test_adversarial_attack(loss_function=args.loss)
     torch.cuda.empty_cache() 

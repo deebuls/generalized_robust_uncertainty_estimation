@@ -335,6 +335,7 @@ class KeypointVisualizer:
             'laplace': LaplaceDistribution(),
             'student_t': StudentTDistribution(),
             'generalized_gaussian': GeneralizedGaussianDistribution(),
+            'evidential': GaussianDistribution(),
         }
         
         if isinstance(distribution, str):
@@ -536,7 +537,7 @@ def demo_visualizer():
     pred_keypoints_batch = keypoints_batch + 0.02 * torch.randn_like(keypoints_batch)
     
     # Test different distributions
-    distributions_to_test = ['gaussian', 'laplace', 'student_t', 'generalized_gaussian']
+    distributions_to_test = ['gaussian', 'laplace', 'student_t', 'generalized_gaussian', 'evidential']
     
     for dist_name in distributions_to_test:
         print(f"\nTesting {dist_name} distribution:")
@@ -557,6 +558,8 @@ def demo_visualizer():
             # Scale and degrees of freedom (scale_x, scale_y, dof)
             uncertainty_params = torch.ones(batch_size, num_keypoints, 4)
             uncertainty_params[..., :] = 1 + 1 * torch.rand(batch_size, num_keypoints, 4)  # dof between 1-2
+        elif dist_name == 'evidential':
+            uncertainty_params = 0.001 + 0.0005 * torch.rand(batch_size, num_keypoints, 2)
         # Create visualizer and display
         visualizer = KeypointVisualizer(distribution=dist_name, img_size=img_size)
         visualizer.visualize_batch(

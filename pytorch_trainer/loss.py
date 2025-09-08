@@ -141,11 +141,21 @@ def KL_NIG(mu1, v1, a1, b1, mu2, v2, a2, b2):
 
     return KL
 
+def NIG_Reg(y, gamma, v, alpha, beta, omega=0.01, reduce=True, kl=False):
+    error = torch.abs(y-gamma)
 
-def EvidentialRegression(y_true, evidential_output, coeff=1.0):
-    gamma, v, alpha, beta = tf.split(evidential_output, 4, axis=-1)
-    loss_nll = NIG_NLL(y_true, gamma, v, alpha, beta)
-    loss_reg = NIG_Reg(y_true, gamma, v, alpha, beta)
+    if kl:
+        kl = KL_NIG(gamma, v, alpha, beta, gamma, omega, 1+omega, beta)
+        reg = error*kl
+    else:
+        evi = 2*v+(alpha)
+        reg = error*evi
+
+    return torch.mean(reg) if reduce else reg
+
+def EvidentialRegression(input, target, v, alpha, beta,  coeff=0.01):
+    loss_nll = NIG_NLL(target, input, v, alpha, beta)
+    loss_reg = NIG_Reg(target, input, v, alpha, beta)
     return loss_nll + coeff * loss_reg
 
 def GeneralGaussianNLLLoss(input, target, alpha, beta, eps=1e-06, reduction='mean'): 

@@ -33,6 +33,7 @@ IMG_SIZE = 256
 class Model(Enum):
     GroundTruth = "GroundTruth"
     Gaussian = "Gaussian"
+    Evidential = "Evidential"
     Laplace = "Laplace"
     Generalized = "Generalized"
 
@@ -44,6 +45,10 @@ trained_models = {
     Model.Gaussian: [
         ["gaussian/gaussian_with_outliers_None_resnet.pth", 0.0],
         ["gaussian/gaussian_with_outliers_True_resnet.pth", 5.0],
+    ],
+    Model.Evidential: [
+        ["evidential/evidential_with_outliers_None_resnet.pth", 0.0],
+        ["evidential/evidential_with_outliers_True_resnet.pth", 5.0],
     ],
     Model.Laplace: [
         ["laplace/laplace_with_outliers_None_resnet.pth", 0.0],
@@ -60,6 +65,8 @@ def load_model(method, check_point_path):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     if method == Model.Generalized:
         model = KeypointResnetModel(additional_output=True).to(device)
+    elif method == Model.Evidential:
+        model = KeypointResnetModel(is_evidential=True).to(device)
     else:
         model = KeypointResnetModel().to(device)
     model.load_state_dict(torch.load(check_point_path, weights_only=True))
@@ -117,6 +124,9 @@ def get_prediction_summary(model, dataloader, device, method, model_path, eps=0.
         # Perform inference
         if method == Model.Generalized:
             pred_mean, pred_scale, beta = model(images)
+        elif method == Model.Evidential:
+            pred_mean, pred_scale, alpha, beta = model(images)
+            pred_scale = beta/(pred_scale*(alpha-1)) #variance
         else:
             pred_mean, pred_scale = model(images)
             beta = torch.ones_like(pred_scale)
@@ -144,6 +154,9 @@ def get_prediction_summary(model, dataloader, device, method, model_path, eps=0.
             # Re-classify the perturbed image
             if method == Model.Generalized:
                 pred_mean, pred_scale, beta = model(perturbed_data_normalized)
+            elif method == Model.Evidential:
+                pred_mean, pred_scale, alpha, beta = model(images)
+                pred_scale = beta/(pred_scale*(alpha-1)) #variance
             else:
                 pred_mean, pred_scale = model(perturbed_data_normalized)
                 beta = torch.ones_like(pred_scale)
@@ -194,12 +207,16 @@ def gen_interval_score_plot(df_image):
     df_pixel["lower"] = df_pixel['Beta']
     df_pixel["lower"].mask(df_pixel["Method"]=="Gaussian", 
             norm.ppf(lower_percentile , loc=df_pixel['Mu'], scale=np.sqrt(df_pixel['Var'])), inplace=True )
+    df_pixel["lower"].mask(df_pixel["Method"]=="Evidential", 
+            norm.ppf(lower_percentile , loc=df_pixel['Mu'], scale=np.sqrt(df_pixel['Var'])), inplace=True )
     df_pixel["lower"].mask(df_pixel["Method"]=="Laplace", 
             laplace.ppf(lower_percentile , loc=df_pixel['Mu'], scale=df_pixel['Var']), inplace=True)
     df_pixel["lower"].mask(df_pixel["Method"]=="Generalized", 
             gennorm.ppf(lower_percentile , loc=df_pixel['Mu'], scale=df_pixel['Var'], beta=df_pixel['Beta']), inplace=True)
     df_pixel["upper"] = df_pixel['Beta']
     df_pixel["upper"].mask(df_pixel["Method"]=="Gaussian", 
+            norm.ppf(upper_percentile , loc=df_pixel['Mu'], scale=np.sqrt(df_pixel['Var'])), inplace=True)
+    df_pixel["upper"].mask(df_pixel["Method"]=="Evidential", 
             norm.ppf(upper_percentile , loc=df_pixel['Mu'], scale=np.sqrt(df_pixel['Var'])), inplace=True)
     df_pixel["upper"].mask(df_pixel["Method"]=="Laplace", 
             laplace.ppf(upper_percentile , loc=df_pixel['Mu'], scale=df_pixel['Var']), inplace=True)

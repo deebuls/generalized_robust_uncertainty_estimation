@@ -33,6 +33,7 @@ IMG_SIZE = 256
 class Model(Enum):
     GroundTruth = "GroundTruth"
     Gaussian = "Gaussian"
+    Evidential = "Evidential"
     Laplace = "Laplace"
     Generalized = "Generalized"
 
@@ -44,6 +45,10 @@ trained_models = {
     Model.Gaussian: [
         #"gaussian/gaussian_with_outliers_None_resnet.pth",
         "gaussian/gaussian_with_outliers_True_resnet.pth",
+    ],
+    Model.Evidential: [
+        #["evidential/evidential_with_outliers_None_resnet.pth", 0.0],
+        "evidential/evidential_with_outliers_True_resnet.pth",
     ],
     Model.Laplace: [
         #"laplace/laplace_with_outliers_None_resnet.pth",
@@ -60,6 +65,8 @@ def load_model(method, check_point_path):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     if method == Model.Generalized:
         model = KeypointResnetModel(additional_output=True).to(device)
+    elif method == Model.Evidential:
+        model = KeypointResnetModel(is_evidential=True).to(device)
     else:
         model = KeypointResnetModel().to(device)
     model.load_state_dict(torch.load(check_point_path, weights_only=True))
@@ -115,6 +122,9 @@ def get_prediction_summary(model, dataloader, device, method, model_path, eps=0.
         # Perform inference
         if method == Model.Generalized:
             pred_mean, pred_scale, beta = model(images)
+        elif method == Model.Evidential:
+            pred_mean, pred_scale, alpha, beta = model(images)
+            pred_scale = beta/(pred_scale*(alpha-1)) #variance
         else:
             pred_mean, pred_scale = model(images)
             beta = torch.ones_like(pred_scale)
@@ -142,6 +152,9 @@ def get_prediction_summary(model, dataloader, device, method, model_path, eps=0.
             # Re-classify the perturbed image
             if method == Model.Generalized:
                 pred_mean, pred_scale, beta = model(perturbed_data_normalized)
+            elif method == Model.Evidential:
+                pred_mean, pred_scale, alpha, beta = model(images)
+                pred_scale = beta/(pred_scale*(alpha-1)) #variance
             else:
                 pred_mean, pred_scale = model(perturbed_data_normalized)
                 beta = torch.ones_like(pred_scale)
@@ -172,6 +185,8 @@ def visualize_batch(images, keypoints, pred_mean, pred_scale, pred_beta, method,
         # The batch size and the middle dimension remain the same.
         pred_scale = torch.cat((pred_scale, pred_beta), dim=2)
         loss_function = "generalized_gaussian"
+    elif method == Model.Evidential:
+        loss_function = "evidential"
     elif method == Model.Gaussian:
         loss_function = "gaussian"
     elif method == Model.Laplace:
@@ -206,6 +221,8 @@ def gen_calibration_plot(df_image, eps=0.0, ood=False, plot=True):
                 elif method == Model.Laplace:
                     ppf = scipy.stats.laplace.ppf(p, loc=df_model["Mu"], scale=df_model["Var"])
                 elif method == Model.Gaussian:
+                    ppf = scipy.stats.norm.ppf(p, loc=df_model["Mu"], scale=np.sqrt(df_model["Var"]))
+                elif method == Model.Evidential:
                     ppf = scipy.stats.norm.ppf(p, loc=df_model["Mu"], scale=np.sqrt(df_model["Var"]))
 
                 obs_p = (df_model["Keypoint"] < ppf).mean()
@@ -281,12 +298,16 @@ def gen_interval_score_plot(df_image):
     df_pixel["lower"] = df_pixel['Beta']
     df_pixel["lower"].mask(df_pixel["Method"]=="Gaussian", 
             norm.ppf(lower_percentile , loc=df_pixel['Mu'], scale=np.sqrt(df_pixel['Var'])), inplace=True )
+    df_pixel["lower"].mask(df_pixel["Method"]=="Evidential", 
+            norm.ppf(lower_percentile , loc=df_pixel['Mu'], scale=np.sqrt(df_pixel['Var'])), inplace=True )
     df_pixel["lower"].mask(df_pixel["Method"]=="Laplace", 
             laplace.ppf(lower_percentile , loc=df_pixel['Mu'], scale=df_pixel['Var']), inplace=True)
     df_pixel["lower"].mask(df_pixel["Method"]=="Generalized", 
             gennorm.ppf(lower_percentile , loc=df_pixel['Mu'], scale=df_pixel['Var'], beta=df_pixel['Beta']), inplace=True)
     df_pixel["upper"] = df_pixel['Beta']
     df_pixel["upper"].mask(df_pixel["Method"]=="Gaussian", 
+            norm.ppf(upper_percentile , loc=df_pixel['Mu'], scale=np.sqrt(df_pixel['Var'])), inplace=True)
+    df_pixel["upper"].mask(df_pixel["Method"]=="Evidential", 
             norm.ppf(upper_percentile , loc=df_pixel['Mu'], scale=np.sqrt(df_pixel['Var'])), inplace=True)
     df_pixel["upper"].mask(df_pixel["Method"]=="Laplace", 
             laplace.ppf(upper_percentile , loc=df_pixel['Mu'], scale=df_pixel['Var']), inplace=True)
@@ -319,6 +340,7 @@ def gen_interval_score_plot(df_image):
     df_pixel["Entropy"] = 0.5*np.log(2*np.pi*np.exp(1.)*(df_pixel["Var"]))
     print ("Entropy inf count :",np.sum(np.isinf(df_pixel['Entropy'])))
     df_pixel["Entropy"].mask(df_pixel["Method"]=="Gaussian", norm.entropy(loc=df_pixel["Mu"], scale=np.sqrt(df_pixel["Var"])) ) #  entropy for laplace distirbution
+    df_pixel["Entropy"].mask(df_pixel["Method"]=="Evidential", norm.entropy(loc=df_pixel["Mu"], scale=np.sqrt(df_pixel["Var"])) ) #  entropy for laplace distirbution
     df_pixel["Entropy"].mask(df_pixel["Method"]=="Laplace",  laplace.entropy(loc=df_pixel["Mu"], scale=df_pixel["Var"]) ) #  entropy for laplace distirbution
     df_pixel["Entropy"].mask(df_pixel["Method"]=="Generalized",  gennorm.entropy(loc=df_pixel["Mu"], scale=df_pixel["Var"], beta=df_pixel["Beta"]) ) #  entropy for laplace distirbution
 
@@ -343,6 +365,7 @@ def gen_adv_plots(df_image):
     df_pixel["Entropy"] = 0.5*np.log(2*np.pi*np.exp(1.)*(df_pixel["Var"]))
     print ("Entropy inf count :",np.sum(np.isinf(df_pixel['Entropy'])))
     df_pixel["Entropy"].mask(df_pixel["Method"]=="Gaussian", norm.entropy(loc=df_pixel["Mu"], scale=np.sqrt(df_pixel["Var"])) ) #  entropy for laplace distirbution
+    df_pixel["Entropy"].mask(df_pixel["Method"]=="Evidential", norm.entropy(loc=df_pixel["Mu"], scale=np.sqrt(df_pixel["Var"])) ) #  entropy for laplace distirbution
     df_pixel["Entropy"].mask(df_pixel["Method"]=="Laplace",  laplace.entropy(loc=df_pixel["Mu"], scale=df_pixel["Var"]) ) #  entropy for laplace distirbution
     df_pixel["Entropy"].mask(df_pixel["Method"]=="Generalized",  gennorm.entropy(loc=df_pixel["Mu"], scale=df_pixel["Var"], beta=df_pixel["Beta"]) ) #  entropy for laplace distirbution
 
@@ -406,6 +429,7 @@ def gen_ood_comparison(df_image, unc_key="Entropy"):
     df_pixel["Entropy"] = 0.5*np.log(2*np.pi*np.exp(1.)*(df_pixel["Var"]))
     print ("Entropy inf count :",np.sum(np.isinf(df_pixel['Entropy'])))
     df_pixel["Entropy"].mask(df_pixel["Method"]=="Gaussian", norm.entropy(loc=df_pixel["Mu"], scale=np.sqrt(df_pixel["Var"])) ) #  entropy for Gaussian distirbution
+    df_pixel["Entropy"].mask(df_pixel["Method"]=="Evidential", norm.entropy(loc=df_pixel["Mu"], scale=np.sqrt(df_pixel["Var"])) ) #  entropy for laplace distirbution
     df_pixel["Entropy"].mask(df_pixel["Method"]=="Laplace",  laplace.entropy(loc=df_pixel["Mu"], scale=df_pixel["Var"]) ) #  entropy for laplace distirbution
     df_pixel["Entropy"].mask(df_pixel["Method"]=="Generalized",  gennorm.entropy(loc=df_pixel["Mu"], scale=df_pixel["Var"], beta=df_pixel["Beta"]) ) #  entropy for laplace distirbution
 
@@ -526,10 +550,10 @@ else:
     df_image = compute_predictions()
     df_image.to_pickle("cached_keypoint_results.pkl")
 
-#gen_calibration_plot(df_image)
-#df_image["Mu"] = df_image["Mu"] * IMG_SIZE
-#df_image["Keypoint"] = df_image["Keypoint"] * IMG_SIZE
+gen_calibration_plot(df_image)
+df_image["Mu"] = df_image["Mu"] * IMG_SIZE
+df_image["Keypoint"] = df_image["Keypoint"] * IMG_SIZE
 gen_interval_score_plot(df_image)
 gen_adv_plots(df_image)
-#gen_ood_comparison(df_image)
+gen_ood_comparison(df_image)
             
