@@ -29,6 +29,14 @@ parser.add_argument("--load-pkl", action='store_true',
 args = parser.parse_args()
 
 IMG_SIZE = 256
+cm = 1/2.54  # centimeters in inches
+sns.set()
+sns.set_style("white")
+sns.set_style("ticks")
+sns.despine(trim=True)
+sns.set_context("paper")
+sns.color_palette("tab10")
+
 
 class Model(Enum):
     GroundTruth = "GroundTruth"
@@ -248,7 +256,6 @@ def gen_calibration_plot(df_image, eps=0.0, ood=False, plot=True):
         table.to_csv(os.path.join(output_dir, "calib_errors.csv"))
 
         print("Plotting confidence plots")
-        cm = 1/2.54  # centimeters in inches
         plt.figure(figsize=(14.2*cm/3.0,14.2*cm/3.0))
         sns.lineplot(x="Expected Conf.", y="Observed Conf.", hue="Method", data=df_calibration)
         plt.legend(fontsize='xx-small')
@@ -295,6 +302,8 @@ def gen_interval_score_plot(df_image):
     lower_percentile = 0.025
     upper_percentile = 0.975
 
+    df_pixel["Mu"] = df_pixel["Mu"] * IMG_SIZE
+    df_pixel["Keypoint"] = df_pixel["Keypoint"] * IMG_SIZE
     df_pixel["lower"] = df_pixel['Beta']
     df_pixel["lower"].mask(df_pixel["Method"]=="Gaussian", 
             norm.ppf(lower_percentile , loc=df_pixel['Mu'], scale=np.sqrt(df_pixel['Var'])), inplace=True )
@@ -333,7 +342,7 @@ def gen_interval_score_plot(df_image):
     g = sns.boxplot(hue="Epsilon", y="Interval Score", x="Method", data=df_pixel, whis=0.5, showfliers=False)
     #g = sns.catplot(x="Epsilon", y="Interval Score", hue="Method", data=df_pixel, kind="box", whis=0.5, showfliers=False)
     #g.ax.tick_params(labelsize=15)
-    plt.legend(fontsize='xx-small')
+    #plt.legend(fontsize='xx-small')
     plt.savefig(os.path.join(output_dir, f"Interval_score_Adv_box_Keypoint.pdf"), bbox_inches='tight')
     plt.show()
 
@@ -349,7 +358,7 @@ def gen_interval_score_plot(df_image):
     plt.figure(figsize=(14.2*cm/3.0,14.2*cm/3.0))
     #g = sns.boxplot(x="Epsilon", y="Entropy", hue="Method", data=df_pixel, linewidth=0.75, whis=0.5, showfliers=False, fill=False, legend=False)
     g = sns.pointplot(x="Epsilon", y="Entropy", hue="Method", data=df_pixel, errorbar="sd", capsize=.2, linewidth=0.7 )
-    plt.legend(fontsize='xx-small')
+    #plt.legend(fontsize='xx-small')
     plt.savefig(os.path.join(output_dir, f"Entropy_Adv_box_Keypoint.pdf"), bbox_inches='tight')
     plt.show()
 
@@ -379,41 +388,38 @@ def gen_adv_plots(df_image):
     plt.show()
 
     ### Plot epsilon vs uncertainty per method
-    sns.lineplot(x="Epsilon", y="Entropy", hue="Method", data=df_by_method)
+    sns.lineplot(x="Epsilon", y="Entropy", hue="Method", data=df_by_method,
+                 errorbar='sd')
     plt.savefig(os.path.join(output_dir, f"adv_method_entropy.pdf"))
     plt.show()
-    # df_by_method["Entropy"] = 0.5*np.log(2*np.pi*np.exp(1.)*(df_by_method["Sigma"]**2))
-    # sns.lineplot(x="Epsilon", y="Entropy", hue="Method", data=df_by_method)
-    # plt.savefig(os.path.join(output_dir, f"adv_ood-{ood}_method_entropy.pdf"))
+
+
+    # ## Plot entropy cdf for different epsilons
+    # unc_ = np.linspace(df["Entropy"].min(), df["Entropy"].max(), 100)
+
+    # df_cumdf = list()
+    # for method in df["Method"].unique():
+    #     for eps in df["Epsilon"].unique():
+    #         df_subset = df[
+    #             (df["Method"]==method) &
+    #             (df["Epsilon"]==eps)]
+    #         if len(df_subset) == 0:
+    #             continue
+    #         unc = np.sort(df_subset["Entropy"])
+    #         prob = np.linspace(0,1,unc.shape[0])
+    #         f_cdf = scipy.interpolate.interp1d(unc, prob, fill_value=(0.,1.), bounds_error=False)
+    #         prob_ = f_cdf(unc_)
+
+    #         df_single = {'Method': method,
+    #             'Epsilon': eps, "Entropy": unc_, 'CDF': prob_}
+    #         df_cumdf.append(df_single)
+
+    # df_cumdf = pd.DataFrame(df_cumdf)
+    # print (df_cumdf)
+    # g = sns.FacetGrid(df_cumdf, col="Method")
+    # g = g.map_dataframe(sns.lineplot, x="Entropy", y="CDF", hue="Epsilon", errorbar=None).add_legend()
+    # plt.savefig(os.path.join(output_dir, f"adv__cdf_method.pdf"))
     # plt.show()
-
-
-    ### Plot entropy cdf for different epsilons
-    #unc_ = np.linspace(df["Entropy"].min(), df["Entropy"].max(), 100)
-
-    #df_cumdf = list()
-    #for method in df["Method"].unique():
-    #    for eps in df["Epsilon"].unique():
-    #        df_subset = df[
-    #            (df["Method"]==method) &
-    #            (df["Epsilon"]==eps)]
-    #        if len(df_subset) == 0:
-    #            continue
-    #        unc = np.sort(df_subset["Entropy"])
-    #        prob = np.linspace(0,1,unc.shape[0])
-    #        f_cdf = scipy.interpolate.interp1d(unc, prob, fill_value=(0.,1.), bounds_error=False)
-    #        prob_ = f_cdf(unc_)
-
-    #        df_single = {'Method': method,
-    #            'Epsilon': eps, "Entropy": unc_, 'CDF': prob_}
-    #        df_cumdf.append(df_single)
-
-    #df_cumdf = pd.DataFrame(df_cumdf)
-    #print (df_cumdf)
-    #g = sns.FacetGrid(df_cumdf, col="Method")
-    #g = g.map_dataframe(sns.lineplot, x="Entropy", y="CDF", hue="Epsilon", errorbar=None).add_legend()
-    #plt.savefig(os.path.join(output_dir, f"adv__cdf_method.pdf"))
-    #plt.show()
 
 def gen_ood_comparison(df_image, unc_key="Entropy"):
     print(f"Generating OOD plots with unc_key={unc_key}")
@@ -487,7 +493,7 @@ def gen_ood_comparison(df_image, unc_key="Entropy"):
     cm = 1/2.54  # centimeters in inches
     fig = plt.figure(figsize=(14.2*cm/2.0,14.2*cm/2.0))
     #sns.catplot(x="Method", y=unc_key, hue="OOD", data=df_mean_unc_img, kind="box", whis=0.5, showfliers=False)
-    g = sns.boxplot(x="Method", y=unc_key, hue="OOD", data=df_mean_unc_img, whis=0.5, showfliers=False)
+    g = sns.boxplot(y="Method", x=unc_key, hue="OOD", data=df_mean_unc_img, whis=0.5, showfliers=False)
     g.get_legend().remove()
     handles, labels = g.get_legend_handles_labels()
     print ("OOD Labels ", labels)
@@ -551,9 +557,7 @@ else:
     df_image.to_pickle("cached_keypoint_results.pkl")
 
 gen_calibration_plot(df_image)
-df_image["Mu"] = df_image["Mu"] * IMG_SIZE
-df_image["Keypoint"] = df_image["Keypoint"] * IMG_SIZE
-gen_interval_score_plot(df_image)
+#gen_interval_score_plot(df_image)
 gen_adv_plots(df_image)
 gen_ood_comparison(df_image)
             
