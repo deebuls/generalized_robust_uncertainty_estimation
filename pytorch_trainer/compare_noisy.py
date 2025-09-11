@@ -21,6 +21,14 @@ from models import KeypointResnetModel
 from visualize import KeypointVisualizer
 import tqdm
 
+cm = 1/2.54  # centimeters in inches
+sns.set()
+sns.set_style("white")
+sns.set_style("ticks")
+sns.despine(trim=True)
+sns.set_context("paper")
+sns.color_palette("tab10")
+
 parser = argparse.ArgumentParser()
 parser.add_argument("--load-pkl", action='store_true',
                     help="Load predictions for a cached pickle file or \
@@ -192,13 +200,15 @@ def gen_interval_score_plot(df_image):
     cm = 1/2.54  # centimeters in inches
     plt.figure(figsize=(14.2*cm/2.0,14.2*cm/2.0))
     #g = sns.catplot(hue="Outliers", y="RMSE", x="Method", data=df_pixel, kind="box", whis=0.5, showfliers=False)
-    g = sns.boxplot(hue="Outliers", y="RMSE", x="Method", data=df_pixel, whis=0.5, showfliers=False)
+    g = sns.boxplot(hue="Outliers", x="RMSE", y="Method", data=df_pixel, whis=0.5, showfliers=False)
     plt.legend(fontsize='xx-small')
     plt.savefig(os.path.join(output_dir, f"RMSE_Comparison_Keypoint.pdf"), bbox_inches='tight')
     plt.show()
 
     print (f"Generating Interval Score")
 
+    df_pixel["Mu"] = df_pixel["Mu"] * IMG_SIZE
+    df_pixel["Keypoint"] = df_pixel["Keypoint"] * IMG_SIZE
     # Calculate the 95% interval regions
     # This corresponds to the 2.5th and 97.5th percentiles of the distributions.
     lower_percentile = 0.025
@@ -244,14 +254,45 @@ def gen_interval_score_plot(df_image):
     print (df_pixel.groupby(["Method", "Outliers"])['Beta'].describe() )
     cm = 1/2.54  # centimeters in inches
     plt.figure(figsize=(14.2*cm/2.0,14.2*cm/2.0))
-    g = sns.boxplot(hue="Outliers", y="Interval Score", x="Method", data=df_pixel, whis=0.5, showfliers=False)
+    g = sns.boxplot(hue="Outliers", x="Interval Score", y="Method", data=df_pixel, whis=0.5, showfliers=False)
     #g = sns.catplot(x="Epsilon", y="Interval Score", hue="Method", data=df_pixel, kind="box", whis=0.5, showfliers=False)
     #g.ax.tick_params(labelsize=15)
     plt.legend(fontsize='xx-small')
     plt.savefig(os.path.join(output_dir, f"Interval_score_Comparison_Keypoint.pdf"), bbox_inches='tight')
     plt.show()
 
+    fig = plt.figure(figsize=(14.2*cm, 14.2*cm/2.5))
+    gs = fig.add_gridspec(1, 2)
+    gs.update(wspace=0.3, hspace=0.5) # set the spacing between axes. 
+    ax1 = fig.add_subplot(gs[0, 0])
+    g = sns.boxplot(hue="Outliers", 
+                    x="RMSE", 
+                    y="Method", 
+                    data=df_pixel, 
+                    whis=0.5, showfliers=False, dodge=True, ax=ax1)
+    sns.despine()
+    g.get_legend().remove()
+    handles, labels = g.get_legend_handles_labels()
+    fig.legend(handles, labels, 
+              #bbox_to_anchor=(0.55, 0.98), 
+               loc='upper center', ncol=3, fancybox=True, shadow=True)
 
+    #plt.savefig(os.path.join(output_dir, f"comparison_rmse.pdf"))
+
+    ax2 = fig.add_subplot(gs[0, 1])
+    g = sns.boxplot(hue="Outliers", 
+                    x="Interval Score", 
+                    y="Method", 
+                    data=df_pixel, 
+                    whis=0.5, showfliers=False, dodge=True, ax=ax2)
+    sns.despine()
+    g.set(ylabel=None)
+    g.set(yticklabels=[])
+    g.get_legend().remove()
+    plt.tight_layout()
+
+    plt.savefig(os.path.join(output_dir, f"comparison_IS_rmse.pdf"), bbox_inches='tight')
+    plt.show()
     #g.set(yscale="log")
 
     plt.figure(figsize=(14.2*cm/2.0,14.2*cm/2.0))
@@ -269,6 +310,6 @@ else:
     df_image = compute_predictions()
     df_image.to_pickle("cached_keypoint_noisy_results.pkl")
 
-df_image["Mu"] = df_image["Mu"] * IMG_SIZE
-df_image["Keypoint"] = df_image["Keypoint"] * IMG_SIZE
+#df_image["Mu"] = df_image["Mu"] * IMG_SIZE
+#df_image["Keypoint"] = df_image["Keypoint"] * IMG_SIZE
 gen_interval_score_plot(df_image)
