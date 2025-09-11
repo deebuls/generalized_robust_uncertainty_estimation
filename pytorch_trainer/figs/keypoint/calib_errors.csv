@@ -1,0 +1,7 @@
+,mean
+,Calibration Error
+Method,
+Gaussian,0.18604450875017228
+Generalized,0.08172798677139312
+GroundTruth,0.0
+Laplace,0.09882527215102664

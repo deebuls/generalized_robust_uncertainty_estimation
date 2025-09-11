@@ -256,7 +256,7 @@ def gen_calibration_plot(df_image, eps=0.0, ood=False, plot=True):
         table.to_csv(os.path.join(output_dir, "calib_errors.csv"))
 
         print("Plotting confidence plots")
-        plt.figure(figsize=(14.2*cm/3.0,14.2*cm/3.0))
+        plt.figure(figsize=(14.2*cm/2.0,14.2*cm/2.0))
         sns.lineplot(x="Expected Conf.", y="Observed Conf.", hue="Method", data=df_calibration)
         plt.legend(fontsize='xx-small')
         plt.savefig(os.path.join(output_dir, f"calib_eps-{eps}_ood-{ood}.pdf"), bbox_inches='tight')
@@ -385,15 +385,49 @@ def gen_adv_plots(df_image):
     df_by_method = df_pixel.groupby(["Method", "Epsilon"]).mean().reset_index()
     sns.lineplot(x="Epsilon", y="Error", hue="Method", data=df_by_method)
     plt.savefig(os.path.join(output_dir, f"adv_method_error.pdf"))
-    plt.show()
+    
 
     ### Plot epsilon vs uncertainty per method
-    sns.lineplot(x="Epsilon", y="Entropy", hue="Method", data=df_by_method,
-                 errorbar='sd')
+    sns.lineplot(x="Epsilon", y="Entropy", hue="Method", data=df_pixel,
+                 errorbar='sd', size=.2)
     plt.savefig(os.path.join(output_dir, f"adv_method_entropy.pdf"))
     plt.show()
 
+    for method_name in df_pixel['Method'].unique():
+        mask = (df_pixel['Method'] == method_name)
+        min_val = df_pixel.loc[mask, 'Entropy'].min()
+        max_val = df_pixel.loc[mask, 'Entropy'].max()
 
+        df_pixel.loc[mask, 'Normalized_Entropy'] = (
+            df_pixel.loc[mask, 'Entropy'] - min_val) / (max_val - min_val)
+
+    fig = plt.figure(figsize=(14.2*cm, 14.2*cm/2.5))
+    gs = fig.add_gridspec(1, 2)
+    gs.update(wspace=0.3, hspace=0.5) # set the spacing between axes. 
+    ax1 = fig.add_subplot(gs[0, 0])
+    g = sns.pointplot(
+        data=df_pixel, x="Epsilon", y="Error", hue="Method",
+        capsize=.2, errorbar="se", ax=ax1
+    )
+    sns.despine(left=True)
+    g.get_legend().remove()
+    handles, labels = g.get_legend_handles_labels()
+    fig.legend(handles, labels, 
+              #bbox_to_anchor=(0.55, 0.98), 
+               loc='upper center', ncol=4, fancybox=True, shadow=True)
+
+    ax2 = fig.add_subplot(gs[0, 1])
+    g = sns.pointplot(
+        data=df_pixel, x="Epsilon", y="Normalized_Entropy", hue="Method",
+        capsize=.2, errorbar="se", ax=ax2)
+    sns.despine(left=True)
+    #g.set(ylabel=None)
+    #g.set(yticklabels=[])
+    g.get_legend().remove()
+    plt.tight_layout()
+    plt.savefig(os.path.join(output_dir, f"adversarial_plot.pdf"), bbox_inches='tight')
+    plt.show()
+    
     # ## Plot entropy cdf for different epsilons
     # unc_ = np.linspace(df["Entropy"].min(), df["Entropy"].max(), 100)
 
@@ -439,6 +473,13 @@ def gen_ood_comparison(df_image, unc_key="Entropy"):
     df_pixel["Entropy"].mask(df_pixel["Method"]=="Laplace",  laplace.entropy(loc=df_pixel["Mu"], scale=df_pixel["Var"]) ) #  entropy for laplace distirbution
     df_pixel["Entropy"].mask(df_pixel["Method"]=="Generalized",  gennorm.entropy(loc=df_pixel["Mu"], scale=df_pixel["Var"], beta=df_pixel["Beta"]) ) #  entropy for laplace distirbution
 
+    for method_name in df_pixel['Method'].unique():
+        mask = (df_pixel['Method'] == method_name)
+        min_val = df_pixel.loc[mask, 'Entropy'].min()
+        max_val = df_pixel.loc[mask, 'Entropy'].max()
+
+        df_pixel.loc[mask, 'Normalized_Entropy'] = (
+            df_pixel.loc[mask, 'Entropy'] - min_val) / (max_val - min_val)
     df_by_method = df_pixel.groupby(["Method","Model Path", "OOD"])
     df_by_image = df_pixel.groupby([df_pixel.index, "Method","Model Path", "OOD"])
 
@@ -556,7 +597,7 @@ else:
     df_image = compute_predictions()
     df_image.to_pickle("cached_keypoint_results.pkl")
 
-gen_calibration_plot(df_image)
+#gen_calibration_plot(df_image)
 #gen_interval_score_plot(df_image)
 gen_adv_plots(df_image)
 gen_ood_comparison(df_image)
