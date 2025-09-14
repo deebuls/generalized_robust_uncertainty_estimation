@@ -742,6 +742,266 @@
       \field{pages}{685\bibrangedash 694}
       \range{pages}{10}
     \endentry
+    \entry{Riquelme2018Deep}{inproceedings}{}
+      \name{author}{3}{}{%
+        {{hash=cee59af5363f5cb5e5e95d437dd91534}{%
+           family={Riquelme},
+           familyi={R\bibinitperiod},
+           given={Carlos},
+           giveni={C\bibinitperiod}}}%
+        {{hash=641a3f5d5ce834c4b56fb672c5df0207}{%
+           family={Tucker},
+           familyi={T\bibinitperiod},
+           given={George},
+           giveni={G\bibinitperiod}}}%
+        {{hash=b9d827c94405733235f3f953a0691fd5}{%
+           family={Snoek},
+           familyi={S\bibinitperiod},
+           given={Jasper},
+           giveni={J\bibinitperiod}}}%
+      }
+      \strng{namehash}{6b3b09e53f45a23861586cb0138f194e}
+      \strng{fullhash}{6b3b09e53f45a23861586cb0138f194e}
+      \strng{bibnamehash}{6b3b09e53f45a23861586cb0138f194e}
+      \strng{authorbibnamehash}{6b3b09e53f45a23861586cb0138f194e}
+      \strng{authornamehash}{6b3b09e53f45a23861586cb0138f194e}
+      \strng{authorfullhash}{6b3b09e53f45a23861586cb0138f194e}
+      \field{sortinit}{2}
+      \field{sortinithash}{ed39bb39cf854d5250e95b1c1f94f4ed}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{booktitle}{6th International Conference on Learning Representations, {ICLR} 2018, Vancouver, BC, Canada, April 30 - May 3, 2018, Conference Track Proceedings}
+      \field{title}{Deep Bayesian Bandits Showdown: An Empirical Comparison of Bayesian Deep Networks for Thompson Sampling}
+      \field{year}{2018}
+    \endentry
+    \entry{SnoekRSKSSPPA15}{inproceedings}{}
+      \name{author}{9}{}{%
+        {{hash=b9d827c94405733235f3f953a0691fd5}{%
+           family={Snoek},
+           familyi={S\bibinitperiod},
+           given={Jasper},
+           giveni={J\bibinitperiod}}}%
+        {{hash=a2eeff652639f271fa6ec8c3d05d05fa}{%
+           family={Rippel},
+           familyi={R\bibinitperiod},
+           given={Oren},
+           giveni={O\bibinitperiod}}}%
+        {{hash=fe49ec9b6f902b79d166c1f25405c088}{%
+           family={Swersky},
+           familyi={S\bibinitperiod},
+           given={Kevin},
+           giveni={K\bibinitperiod}}}%
+        {{hash=9ca4d6f3496c5a623fcad2f5de58670b}{%
+           family={Kiros},
+           familyi={K\bibinitperiod},
+           given={Ryan},
+           giveni={R\bibinitperiod}}}%
+        {{hash=a930c576ecba694b17665f1e3ed5dfa8}{%
+           family={Satish},
+           familyi={S\bibinitperiod},
+           given={Nadathur},
+           giveni={N\bibinitperiod}}}%
+        {{hash=995d38d971d010a683eda2f6ada66d16}{%
+           family={Sundaram},
+           familyi={S\bibinitperiod},
+           given={Narayanan},
+           giveni={N\bibinitperiod}}}%
+        {{hash=76e30f39b4a7db9384b835bae7095f2c}{%
+           family={Patwary},
+           familyi={P\bibinitperiod},
+           given={Md.\bibnamedelimi Mostofa\bibnamedelima Ali},
+           giveni={M\bibinitperiod\bibinitdelim M\bibinitperiod\bibinitdelim A\bibinitperiod}}}%
+        {{hash=5b58310de93bc052c8e6b94280fd12ea}{%
+           family={Prabhat},
+           familyi={P\bibinitperiod}}}%
+        {{hash=c1552be0c6aa9c6e0fd91a130a682853}{%
+           family={Adams},
+           familyi={A\bibinitperiod},
+           given={Ryan\bibnamedelima P.},
+           giveni={R\bibinitperiod\bibinitdelim P\bibinitperiod}}}%
+      }
+      \list{publisher}{1}{%
+        {JMLR.org}%
+      }
+      \strng{namehash}{da9261f16faab4da81a07409b42afaff}
+      \strng{fullhash}{43861213e8477bc71a2d2f7504b8848d}
+      \strng{bibnamehash}{ed6793cb5ec5e5b336b96236df5b354f}
+      \strng{authorbibnamehash}{ed6793cb5ec5e5b336b96236df5b354f}
+      \strng{authornamehash}{da9261f16faab4da81a07409b42afaff}
+      \strng{authorfullhash}{43861213e8477bc71a2d2f7504b8848d}
+      \field{sortinit}{2}
+      \field{sortinithash}{ed39bb39cf854d5250e95b1c1f94f4ed}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{booktitle}{Proceedings of the 32nd International Conference on Machine Learning, {ICML} 2015, Lille, France, 6-11 July 2015}
+      \field{series}{{JMLR} Workshop and Conference Proceedings}
+      \field{title}{Scalable Bayesian Optimization Using Deep Neural Networks}
+      \field{volume}{37}
+      \field{year}{2015}
+      \field{pages}{2171\bibrangedash 2180}
+      \range{pages}{10}
+    \endentry
+    \entry{calandra2016manifold}{inproceedings}{}
+      \name{author}{4}{}{%
+        {{hash=864584c60b808b517f2a06c664ec116a}{%
+           family={Calandra},
+           familyi={C\bibinitperiod},
+           given={Roberto},
+           giveni={R\bibinitperiod}}}%
+        {{hash=c2cb77a864f65a21da0f69121b89835b}{%
+           family={Peters},
+           familyi={P\bibinitperiod},
+           given={Jan},
+           giveni={J\bibinitperiod}}}%
+        {{hash=58d90ed7b7348c7a5a9b4a2a8f46df7b}{%
+           family={Rasmussen},
+           familyi={R\bibinitperiod},
+           given={Carl\bibnamedelima Edward},
+           giveni={C\bibinitperiod\bibinitdelim E\bibinitperiod}}}%
+        {{hash=f9733f0a0e8718b4f6e95508bc8def08}{%
+           family={Deisenroth},
+           familyi={D\bibinitperiod},
+           given={Marc\bibnamedelima Peter},
+           giveni={M\bibinitperiod\bibinitdelim P\bibinitperiod}}}%
+      }
+      \list{organization}{1}{%
+        {IEEE}%
+      }
+      \strng{namehash}{8741b4defa0b8a3e7b45db86862152c8}
+      \strng{fullhash}{ac727f2365215ae5bfef7d553eb4a5a4}
+      \strng{bibnamehash}{b12ddbaec8f3b1b7e9731953e8e41bbc}
+      \strng{authorbibnamehash}{b12ddbaec8f3b1b7e9731953e8e41bbc}
+      \strng{authornamehash}{8741b4defa0b8a3e7b45db86862152c8}
+      \strng{authorfullhash}{ac727f2365215ae5bfef7d553eb4a5a4}
+      \field{sortinit}{2}
+      \field{sortinithash}{ed39bb39cf854d5250e95b1c1f94f4ed}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{booktitle}{2016 International Joint Conference on Neural Networks (IJCNN)}
+      \field{title}{Manifold Gaussian processes for regression}
+      \field{year}{2016}
+      \field{pages}{3338\bibrangedash 3345}
+      \range{pages}{8}
+    \endentry
+    \entry{tagasovska2019single}{article}{}
+      \name{author}{2}{}{%
+        {{hash=070163542003b4ffaa3410f76fced9b7}{%
+           family={Tagasovska},
+           familyi={T\bibinitperiod},
+           given={Natasa},
+           giveni={N\bibinitperiod}}}%
+        {{hash=47d681c0cbae75196012a538c46ccc06}{%
+           family={Lopez-Paz},
+           familyi={L\bibinithyphendelim P\bibinitperiod},
+           given={David},
+           giveni={D\bibinitperiod}}}%
+      }
+      \strng{namehash}{ef3d080521911f30b12e348cfe908c7d}
+      \strng{fullhash}{ef3d080521911f30b12e348cfe908c7d}
+      \strng{bibnamehash}{ef3d080521911f30b12e348cfe908c7d}
+      \strng{authorbibnamehash}{ef3d080521911f30b12e348cfe908c7d}
+      \strng{authornamehash}{ef3d080521911f30b12e348cfe908c7d}
+      \strng{authorfullhash}{ef3d080521911f30b12e348cfe908c7d}
+      \field{sortinit}{2}
+      \field{sortinithash}{ed39bb39cf854d5250e95b1c1f94f4ed}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Advances in Neural Information Processing Systems}
+      \field{title}{Single-Model Uncertainties for Deep Learning}
+      \field{volume}{32}
+      \field{year}{2019}
+      \field{pages}{6417\bibrangedash 6428}
+      \range{pages}{12}
+    \endentry
+    \entry{LiuLPTBL20}{inproceedings}{}
+      \name{author}{6}{}{%
+        {{hash=8d01b2e721e15770da959c94aac8d6b3}{%
+           family={Liu},
+           familyi={L\bibinitperiod},
+           given={Jeremiah\bibnamedelima Z.},
+           giveni={J\bibinitperiod\bibinitdelim Z\bibinitperiod}}}%
+        {{hash=14378cef37bf00d8a8fcc705a62d573e}{%
+           family={Lin},
+           familyi={L\bibinitperiod},
+           given={Zi},
+           giveni={Z\bibinitperiod}}}%
+        {{hash=d0bbf7dc5512b4082e8219318e75cf2f}{%
+           family={Padhy},
+           familyi={P\bibinitperiod},
+           given={Shreyas},
+           giveni={S\bibinitperiod}}}%
+        {{hash=831126fd259babc16b5bd86bbc5f0098}{%
+           family={Tran},
+           familyi={T\bibinitperiod},
+           given={Dustin},
+           giveni={D\bibinitperiod}}}%
+        {{hash=58806abd8c85576274fb249bc58d4ec5}{%
+           family={Bedrax-Weiss},
+           familyi={B\bibinithyphendelim W\bibinitperiod},
+           given={Tania},
+           giveni={T\bibinitperiod}}}%
+        {{hash=55c0a67ecb602e5a3063393ffee9c7fa}{%
+           family={Lakshminarayanan},
+           familyi={L\bibinitperiod},
+           given={Balaji},
+           giveni={B\bibinitperiod}}}%
+      }
+      \strng{namehash}{7f634bc53aef0dc23a6b066e48741dd1}
+      \strng{fullhash}{258eeb196af2244124b7a44ef2a727b7}
+      \strng{bibnamehash}{19d53d7f3b483c1c95cc923ce1e6ddfd}
+      \strng{authorbibnamehash}{19d53d7f3b483c1c95cc923ce1e6ddfd}
+      \strng{authornamehash}{7f634bc53aef0dc23a6b066e48741dd1}
+      \strng{authorfullhash}{258eeb196af2244124b7a44ef2a727b7}
+      \field{sortinit}{2}
+      \field{sortinithash}{ed39bb39cf854d5250e95b1c1f94f4ed}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{booktitle}{Advances in Neural Information Processing Systems 33: Annual Conference on Neural Information Processing Systems 2020, NeurIPS 2020, December 6-12, 2020, virtual}
+      \field{title}{Simple and Principled Uncertainty Estimation with Deterministic Deep Learning via Distance Awareness}
+      \field{year}{2020}
+    \endentry
+    \entry{van2020uncertainty}{inproceedings}{}
+      \name{author}{4}{}{%
+        {{hash=b31d3d0b5b905b404083b93c7a418fd3}{%
+           family={Van\bibnamedelima Amersfoort},
+           familyi={V\bibinitperiod\bibinitdelim A\bibinitperiod},
+           given={Joost},
+           giveni={J\bibinitperiod}}}%
+        {{hash=901f01ae77fb6a76c3f1ce5dfb3de257}{%
+           family={Smith},
+           familyi={S\bibinitperiod},
+           given={Lewis},
+           giveni={L\bibinitperiod}}}%
+        {{hash=a71fae003da84f44e31d26e868859945}{%
+           family={Teh},
+           familyi={T\bibinitperiod},
+           given={Yee\bibnamedelima Whye},
+           giveni={Y\bibinitperiod\bibinitdelim W\bibinitperiod}}}%
+        {{hash=d4f394bd4030e20e7b1399e0abe7dc6a}{%
+           family={Gal},
+           familyi={G\bibinitperiod},
+           given={Yarin},
+           giveni={Y\bibinitperiod}}}%
+      }
+      \list{organization}{1}{%
+        {PMLR}%
+      }
+      \strng{namehash}{ba57c5fc16ce70ff2f72c3d2b7e5f5f9}
+      \strng{fullhash}{054ffbffb6fd9e201f6c9b667d898114}
+      \strng{bibnamehash}{4e083fddcf96fbbb725b1604d8aba567}
+      \strng{authorbibnamehash}{4e083fddcf96fbbb725b1604d8aba567}
+      \strng{authornamehash}{ba57c5fc16ce70ff2f72c3d2b7e5f5f9}
+      \strng{authorfullhash}{054ffbffb6fd9e201f6c9b667d898114}
+      \field{sortinit}{2}
+      \field{sortinithash}{ed39bb39cf854d5250e95b1c1f94f4ed}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{booktitle}{International Conference on Machine Learning}
+      \field{title}{Uncertainty estimation using a single deep deterministic neural network}
+      \field{year}{2020}
+      \field{pages}{9690\bibrangedash 9700}
+      \range{pages}{11}
+    \endentry
     \entry{huber2004robust}{book}{}
       \name{author}{1}{}{%
         {{hash=2e7489c001c33b64b64d65458065bd5c}{%
@@ -759,13 +1019,76 @@
       \strng{authorbibnamehash}{2e7489c001c33b64b64d65458065bd5c}
       \strng{authornamehash}{2e7489c001c33b64b64d65458065bd5c}
       \strng{authorfullhash}{2e7489c001c33b64b64d65458065bd5c}
-      \field{sortinit}{1}
-      \field{sortinithash}{50c6687d7fc80f50136d75228e3c59ba}
+      \field{sortinit}{2}
+      \field{sortinithash}{ed39bb39cf854d5250e95b1c1f94f4ed}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{title}{Robust statistics}
       \field{volume}{523}
       \field{year}{2004}
+    \endentry
+    \entry{barron2019general}{inproceedings}{}
+      \name{author}{1}{}{%
+        {{hash=562f3254a241932db4a6d44a97473ec5}{%
+           family={Barron},
+           familyi={B\bibinitperiod},
+           given={Jonathan\bibnamedelima T},
+           giveni={J\bibinitperiod\bibinitdelim T\bibinitperiod}}}%
+      }
+      \strng{namehash}{562f3254a241932db4a6d44a97473ec5}
+      \strng{fullhash}{562f3254a241932db4a6d44a97473ec5}
+      \strng{bibnamehash}{562f3254a241932db4a6d44a97473ec5}
+      \strng{authorbibnamehash}{562f3254a241932db4a6d44a97473ec5}
+      \strng{authornamehash}{562f3254a241932db4a6d44a97473ec5}
+      \strng{authorfullhash}{562f3254a241932db4a6d44a97473ec5}
+      \field{sortinit}{2}
+      \field{sortinithash}{ed39bb39cf854d5250e95b1c1f94f4ed}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{booktitle}{Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition}
+      \field{title}{A general and adaptive robust loss function}
+      \field{year}{2019}
+      \field{pages}{4331\bibrangedash 4339}
+      \range{pages}{9}
+    \endentry
+    \entry{lathuiliere2018deepgum}{inproceedings}{}
+      \name{author}{4}{}{%
+        {{hash=b2c5dc937028a84be7a9acf304073c9a}{%
+           family={Lathuili{è}re},
+           familyi={L\bibinitperiod},
+           given={St{é}phane},
+           giveni={S\bibinitperiod}}}%
+        {{hash=60c229fc5299ae44e9d1af5ea8948774}{%
+           family={Mesejo},
+           familyi={M\bibinitperiod},
+           given={Pablo},
+           giveni={P\bibinitperiod}}}%
+        {{hash=dc307510b5416849a7b4bf16806b21ed}{%
+           family={Alameda-Pineda},
+           familyi={A\bibinithyphendelim P\bibinitperiod},
+           given={Xavier},
+           giveni={X\bibinitperiod}}}%
+        {{hash=eefba46f15eb1fc31142defb790d8005}{%
+           family={Horaud},
+           familyi={H\bibinitperiod},
+           given={Radu},
+           giveni={R\bibinitperiod}}}%
+      }
+      \strng{namehash}{8c482d71d994d57ca04dd19c383fe031}
+      \strng{fullhash}{94c9cc6288d6ae518768e70405b467bb}
+      \strng{bibnamehash}{b22d4046f421ed3e006f7f8b6d9b5970}
+      \strng{authorbibnamehash}{b22d4046f421ed3e006f7f8b6d9b5970}
+      \strng{authornamehash}{8c482d71d994d57ca04dd19c383fe031}
+      \strng{authorfullhash}{94c9cc6288d6ae518768e70405b467bb}
+      \field{sortinit}{2}
+      \field{sortinithash}{ed39bb39cf854d5250e95b1c1f94f4ed}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{booktitle}{Proceedings of the European Conference on Computer Vision (ECCV)}
+      \field{title}{Deepgum: Learning deep robust regression with a gaussian-uniform mixture model}
+      \field{year}{2018}
+      \field{pages}{202\bibrangedash 217}
+      \range{pages}{16}
     \endentry
     \entry{gneiting2007strictly}{article}{}
       \name{author}{2}{}{%
@@ -789,8 +1112,8 @@
       \strng{authorbibnamehash}{e1cf3b58d0c2bb5af66e55c7f264277d}
       \strng{authornamehash}{e1cf3b58d0c2bb5af66e55c7f264277d}
       \strng{authorfullhash}{e1cf3b58d0c2bb5af66e55c7f264277d}
-      \field{sortinit}{2}
-      \field{sortinithash}{ed39bb39cf854d5250e95b1c1f94f4ed}
+      \field{sortinit}{3}
+      \field{sortinithash}{a37a8ef248a93c322189792c34fc68c9}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{journaltitle}{Journal of the American statistical Association}
@@ -800,6 +1123,82 @@
       \field{year}{2007}
       \field{pages}{359\bibrangedash 378}
       \range{pages}{20}
+    \endentry
+    \entry{donoho1983notion}{article}{}
+      \name{author}{2}{}{%
+        {{hash=9fb99e5502c0b871a6067b55fcaf8986}{%
+           family={Donoho},
+           familyi={D\bibinitperiod},
+           given={David\bibnamedelima L},
+           giveni={D\bibinitperiod\bibinitdelim L\bibinitperiod}}}%
+        {{hash=2e7489c001c33b64b64d65458065bd5c}{%
+           family={Huber},
+           familyi={H\bibinitperiod},
+           given={Peter\bibnamedelima J},
+           giveni={P\bibinitperiod\bibinitdelim J\bibinitperiod}}}%
+      }
+      \list{publisher}{1}{%
+        {Belmont, Wadsworth}%
+      }
+      \strng{namehash}{361bfab8b2659476ac5648fab8121986}
+      \strng{fullhash}{361bfab8b2659476ac5648fab8121986}
+      \strng{bibnamehash}{361bfab8b2659476ac5648fab8121986}
+      \strng{authorbibnamehash}{361bfab8b2659476ac5648fab8121986}
+      \strng{authornamehash}{361bfab8b2659476ac5648fab8121986}
+      \strng{authorfullhash}{361bfab8b2659476ac5648fab8121986}
+      \field{sortinit}{3}
+      \field{sortinithash}{a37a8ef248a93c322189792c34fc68c9}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{A festschrift for Erich L. Lehmann}
+      \field{title}{The notion of breakdown point}
+      \field{volume}{157184}
+      \field{year}{1983}
+    \endentry
+    \entry{ucimlrepo}{article}{}
+      \name{author}{3}{}{%
+        {{hash=bc923166ee9deff8aaec3449187ec045}{%
+           family={Kelly},
+           familyi={K\bibinitperiod},
+           given={Markelle},
+           giveni={M\bibinitperiod}}}%
+        {{hash=d6a098c7e41cab1a9115f198c713e01c}{%
+           family={Longjohn},
+           familyi={L\bibinitperiod},
+           given={Rachel},
+           giveni={R\bibinitperiod}}}%
+        {{hash=3e2a5b1c1665fd2de62cc4895e59f330}{%
+           family={Nottingham},
+           familyi={N\bibinitperiod},
+           given={Kolby},
+           giveni={K\bibinitperiod}}}%
+      }
+      \list{organization}{2}{%
+        {University of California, Irvine, School of Information}%
+        {Computer Sciences}%
+      }
+      \strng{namehash}{9e01692dd9b77f31f20353d4ea6310f4}
+      \strng{fullhash}{9e01692dd9b77f31f20353d4ea6310f4}
+      \strng{bibnamehash}{9e01692dd9b77f31f20353d4ea6310f4}
+      \strng{authorbibnamehash}{9e01692dd9b77f31f20353d4ea6310f4}
+      \strng{authornamehash}{9e01692dd9b77f31f20353d4ea6310f4}
+      \strng{authorfullhash}{9e01692dd9b77f31f20353d4ea6310f4}
+      \field{sortinit}{3}
+      \field{sortinithash}{a37a8ef248a93c322189792c34fc68c9}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{title}{The {UCI} Machine Learning Repository}
+      \field{urlday}{15}
+      \field{urlmonth}{5}
+      \field{urlyear}{2025}
+      \field{year}{2023}
+      \field{urldateera}{ce}
+      \verb{urlraw}
+      \verb https://archive.ics.uci.edu
+      \endverb
+      \verb{url}
+      \verb https://archive.ics.uci.edu
+      \endverb
     \endentry
     \entry{lenz2015deep}{article}{}
       \name{author}{3}{}{%
@@ -828,8 +1227,8 @@
       \strng{authorbibnamehash}{0113fb71998685d86bb2e070bb065e93}
       \strng{authornamehash}{0113fb71998685d86bb2e070bb065e93}
       \strng{authorfullhash}{0113fb71998685d86bb2e070bb065e93}
-      \field{sortinit}{2}
-      \field{sortinithash}{ed39bb39cf854d5250e95b1c1f94f4ed}
+      \field{sortinit}{3}
+      \field{sortinithash}{a37a8ef248a93c322189792c34fc68c9}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{journaltitle}{The International Journal of Robotics Research}
@@ -869,8 +1268,8 @@
       \strng{authorbibnamehash}{6edb98fe38401d2fe4a026f5ce6e8451}
       \strng{authornamehash}{3733dbdff90171390240438fddfbc952}
       \strng{authorfullhash}{42c4b52dc3a62cebabbc11c73e1afb53}
-      \field{sortinit}{2}
-      \field{sortinithash}{ed39bb39cf854d5250e95b1c1f94f4ed}
+      \field{sortinit}{4}
+      \field{sortinithash}{e071e0bcb44634fab398d68ad04e69f4}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{booktitle}{Proceedings of the IEEE conference on computer vision and pattern recognition}
@@ -903,8 +1302,8 @@
       \strng{authorbibnamehash}{9efd9b3ecb08e552e0344a37759d14ec}
       \strng{authornamehash}{9efd9b3ecb08e552e0344a37759d14ec}
       \strng{authorfullhash}{9efd9b3ecb08e552e0344a37759d14ec}
-      \field{sortinit}{2}
-      \field{sortinithash}{ed39bb39cf854d5250e95b1c1f94f4ed}
+      \field{sortinit}{4}
+      \field{sortinithash}{e071e0bcb44634fab398d68ad04e69f4}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{booktitle}{International Conference on Learning Representations}
@@ -968,8 +1367,8 @@
       \strng{authorbibnamehash}{e02f61f0709bf7a3b342b81c8767b613}
       \strng{authornamehash}{c0c5e3fe13036b6c19c4fbea472fe505}
       \strng{authorfullhash}{a0f3b62a4d0c84e62545b5f428ec6b41}
-      \field{sortinit}{2}
-      \field{sortinithash}{ed39bb39cf854d5250e95b1c1f94f4ed}
+      \field{sortinit}{4}
+      \field{sortinithash}{e071e0bcb44634fab398d68ad04e69f4}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{journaltitle}{IEEE Robotics and Automation Letters}
@@ -980,331 +1379,7 @@
       \field{pages}{315\bibrangedash 322}
       \range{pages}{8}
     \endentry
-    \entry{Riquelme2018Deep}{inproceedings}{}
-      \name{author}{3}{}{%
-        {{hash=cee59af5363f5cb5e5e95d437dd91534}{%
-           family={Riquelme},
-           familyi={R\bibinitperiod},
-           given={Carlos},
-           giveni={C\bibinitperiod}}}%
-        {{hash=641a3f5d5ce834c4b56fb672c5df0207}{%
-           family={Tucker},
-           familyi={T\bibinitperiod},
-           given={George},
-           giveni={G\bibinitperiod}}}%
-        {{hash=b9d827c94405733235f3f953a0691fd5}{%
-           family={Snoek},
-           familyi={S\bibinitperiod},
-           given={Jasper},
-           giveni={J\bibinitperiod}}}%
-      }
-      \strng{namehash}{6b3b09e53f45a23861586cb0138f194e}
-      \strng{fullhash}{6b3b09e53f45a23861586cb0138f194e}
-      \strng{bibnamehash}{6b3b09e53f45a23861586cb0138f194e}
-      \strng{authorbibnamehash}{6b3b09e53f45a23861586cb0138f194e}
-      \strng{authornamehash}{6b3b09e53f45a23861586cb0138f194e}
-      \strng{authorfullhash}{6b3b09e53f45a23861586cb0138f194e}
-      \field{sortinit}{3}
-      \field{sortinithash}{a37a8ef248a93c322189792c34fc68c9}
-      \field{labelnamesource}{author}
-      \field{labeltitlesource}{title}
-      \field{booktitle}{6th International Conference on Learning Representations, {ICLR} 2018, Vancouver, BC, Canada, April 30 - May 3, 2018, Conference Track Proceedings}
-      \field{title}{Deep Bayesian Bandits Showdown: An Empirical Comparison of Bayesian Deep Networks for Thompson Sampling}
-      \field{year}{2018}
-    \endentry
-    \entry{SnoekRSKSSPPA15}{inproceedings}{}
-      \name{author}{9}{}{%
-        {{hash=b9d827c94405733235f3f953a0691fd5}{%
-           family={Snoek},
-           familyi={S\bibinitperiod},
-           given={Jasper},
-           giveni={J\bibinitperiod}}}%
-        {{hash=a2eeff652639f271fa6ec8c3d05d05fa}{%
-           family={Rippel},
-           familyi={R\bibinitperiod},
-           given={Oren},
-           giveni={O\bibinitperiod}}}%
-        {{hash=fe49ec9b6f902b79d166c1f25405c088}{%
-           family={Swersky},
-           familyi={S\bibinitperiod},
-           given={Kevin},
-           giveni={K\bibinitperiod}}}%
-        {{hash=9ca4d6f3496c5a623fcad2f5de58670b}{%
-           family={Kiros},
-           familyi={K\bibinitperiod},
-           given={Ryan},
-           giveni={R\bibinitperiod}}}%
-        {{hash=a930c576ecba694b17665f1e3ed5dfa8}{%
-           family={Satish},
-           familyi={S\bibinitperiod},
-           given={Nadathur},
-           giveni={N\bibinitperiod}}}%
-        {{hash=995d38d971d010a683eda2f6ada66d16}{%
-           family={Sundaram},
-           familyi={S\bibinitperiod},
-           given={Narayanan},
-           giveni={N\bibinitperiod}}}%
-        {{hash=76e30f39b4a7db9384b835bae7095f2c}{%
-           family={Patwary},
-           familyi={P\bibinitperiod},
-           given={Md.\bibnamedelimi Mostofa\bibnamedelima Ali},
-           giveni={M\bibinitperiod\bibinitdelim M\bibinitperiod\bibinitdelim A\bibinitperiod}}}%
-        {{hash=5b58310de93bc052c8e6b94280fd12ea}{%
-           family={Prabhat},
-           familyi={P\bibinitperiod}}}%
-        {{hash=c1552be0c6aa9c6e0fd91a130a682853}{%
-           family={Adams},
-           familyi={A\bibinitperiod},
-           given={Ryan\bibnamedelima P.},
-           giveni={R\bibinitperiod\bibinitdelim P\bibinitperiod}}}%
-      }
-      \list{publisher}{1}{%
-        {JMLR.org}%
-      }
-      \strng{namehash}{da9261f16faab4da81a07409b42afaff}
-      \strng{fullhash}{43861213e8477bc71a2d2f7504b8848d}
-      \strng{bibnamehash}{ed6793cb5ec5e5b336b96236df5b354f}
-      \strng{authorbibnamehash}{ed6793cb5ec5e5b336b96236df5b354f}
-      \strng{authornamehash}{da9261f16faab4da81a07409b42afaff}
-      \strng{authorfullhash}{43861213e8477bc71a2d2f7504b8848d}
-      \field{sortinit}{3}
-      \field{sortinithash}{a37a8ef248a93c322189792c34fc68c9}
-      \field{labelnamesource}{author}
-      \field{labeltitlesource}{title}
-      \field{booktitle}{Proceedings of the 32nd International Conference on Machine Learning, {ICML} 2015, Lille, France, 6-11 July 2015}
-      \field{series}{{JMLR} Workshop and Conference Proceedings}
-      \field{title}{Scalable Bayesian Optimization Using Deep Neural Networks}
-      \field{volume}{37}
-      \field{year}{2015}
-      \field{pages}{2171\bibrangedash 2180}
-      \range{pages}{10}
-    \endentry
-    \entry{calandra2016manifold}{inproceedings}{}
-      \name{author}{4}{}{%
-        {{hash=864584c60b808b517f2a06c664ec116a}{%
-           family={Calandra},
-           familyi={C\bibinitperiod},
-           given={Roberto},
-           giveni={R\bibinitperiod}}}%
-        {{hash=c2cb77a864f65a21da0f69121b89835b}{%
-           family={Peters},
-           familyi={P\bibinitperiod},
-           given={Jan},
-           giveni={J\bibinitperiod}}}%
-        {{hash=58d90ed7b7348c7a5a9b4a2a8f46df7b}{%
-           family={Rasmussen},
-           familyi={R\bibinitperiod},
-           given={Carl\bibnamedelima Edward},
-           giveni={C\bibinitperiod\bibinitdelim E\bibinitperiod}}}%
-        {{hash=f9733f0a0e8718b4f6e95508bc8def08}{%
-           family={Deisenroth},
-           familyi={D\bibinitperiod},
-           given={Marc\bibnamedelima Peter},
-           giveni={M\bibinitperiod\bibinitdelim P\bibinitperiod}}}%
-      }
-      \list{organization}{1}{%
-        {IEEE}%
-      }
-      \strng{namehash}{8741b4defa0b8a3e7b45db86862152c8}
-      \strng{fullhash}{ac727f2365215ae5bfef7d553eb4a5a4}
-      \strng{bibnamehash}{b12ddbaec8f3b1b7e9731953e8e41bbc}
-      \strng{authorbibnamehash}{b12ddbaec8f3b1b7e9731953e8e41bbc}
-      \strng{authornamehash}{8741b4defa0b8a3e7b45db86862152c8}
-      \strng{authorfullhash}{ac727f2365215ae5bfef7d553eb4a5a4}
-      \field{sortinit}{3}
-      \field{sortinithash}{a37a8ef248a93c322189792c34fc68c9}
-      \field{labelnamesource}{author}
-      \field{labeltitlesource}{title}
-      \field{booktitle}{2016 International Joint Conference on Neural Networks (IJCNN)}
-      \field{title}{Manifold Gaussian processes for regression}
-      \field{year}{2016}
-      \field{pages}{3338\bibrangedash 3345}
-      \range{pages}{8}
-    \endentry
-    \entry{tagasovska2019single}{article}{}
-      \name{author}{2}{}{%
-        {{hash=070163542003b4ffaa3410f76fced9b7}{%
-           family={Tagasovska},
-           familyi={T\bibinitperiod},
-           given={Natasa},
-           giveni={N\bibinitperiod}}}%
-        {{hash=47d681c0cbae75196012a538c46ccc06}{%
-           family={Lopez-Paz},
-           familyi={L\bibinithyphendelim P\bibinitperiod},
-           given={David},
-           giveni={D\bibinitperiod}}}%
-      }
-      \strng{namehash}{ef3d080521911f30b12e348cfe908c7d}
-      \strng{fullhash}{ef3d080521911f30b12e348cfe908c7d}
-      \strng{bibnamehash}{ef3d080521911f30b12e348cfe908c7d}
-      \strng{authorbibnamehash}{ef3d080521911f30b12e348cfe908c7d}
-      \strng{authornamehash}{ef3d080521911f30b12e348cfe908c7d}
-      \strng{authorfullhash}{ef3d080521911f30b12e348cfe908c7d}
-      \field{sortinit}{3}
-      \field{sortinithash}{a37a8ef248a93c322189792c34fc68c9}
-      \field{labelnamesource}{author}
-      \field{labeltitlesource}{title}
-      \field{journaltitle}{Advances in Neural Information Processing Systems}
-      \field{title}{Single-Model Uncertainties for Deep Learning}
-      \field{volume}{32}
-      \field{year}{2019}
-      \field{pages}{6417\bibrangedash 6428}
-      \range{pages}{12}
-    \endentry
-    \entry{LiuLPTBL20}{inproceedings}{}
-      \name{author}{6}{}{%
-        {{hash=8d01b2e721e15770da959c94aac8d6b3}{%
-           family={Liu},
-           familyi={L\bibinitperiod},
-           given={Jeremiah\bibnamedelima Z.},
-           giveni={J\bibinitperiod\bibinitdelim Z\bibinitperiod}}}%
-        {{hash=14378cef37bf00d8a8fcc705a62d573e}{%
-           family={Lin},
-           familyi={L\bibinitperiod},
-           given={Zi},
-           giveni={Z\bibinitperiod}}}%
-        {{hash=d0bbf7dc5512b4082e8219318e75cf2f}{%
-           family={Padhy},
-           familyi={P\bibinitperiod},
-           given={Shreyas},
-           giveni={S\bibinitperiod}}}%
-        {{hash=831126fd259babc16b5bd86bbc5f0098}{%
-           family={Tran},
-           familyi={T\bibinitperiod},
-           given={Dustin},
-           giveni={D\bibinitperiod}}}%
-        {{hash=58806abd8c85576274fb249bc58d4ec5}{%
-           family={Bedrax-Weiss},
-           familyi={B\bibinithyphendelim W\bibinitperiod},
-           given={Tania},
-           giveni={T\bibinitperiod}}}%
-        {{hash=55c0a67ecb602e5a3063393ffee9c7fa}{%
-           family={Lakshminarayanan},
-           familyi={L\bibinitperiod},
-           given={Balaji},
-           giveni={B\bibinitperiod}}}%
-      }
-      \strng{namehash}{7f634bc53aef0dc23a6b066e48741dd1}
-      \strng{fullhash}{258eeb196af2244124b7a44ef2a727b7}
-      \strng{bibnamehash}{19d53d7f3b483c1c95cc923ce1e6ddfd}
-      \strng{authorbibnamehash}{19d53d7f3b483c1c95cc923ce1e6ddfd}
-      \strng{authornamehash}{7f634bc53aef0dc23a6b066e48741dd1}
-      \strng{authorfullhash}{258eeb196af2244124b7a44ef2a727b7}
-      \field{sortinit}{3}
-      \field{sortinithash}{a37a8ef248a93c322189792c34fc68c9}
-      \field{labelnamesource}{author}
-      \field{labeltitlesource}{title}
-      \field{booktitle}{Advances in Neural Information Processing Systems 33: Annual Conference on Neural Information Processing Systems 2020, NeurIPS 2020, December 6-12, 2020, virtual}
-      \field{title}{Simple and Principled Uncertainty Estimation with Deterministic Deep Learning via Distance Awareness}
-      \field{year}{2020}
-    \endentry
-    \entry{van2020uncertainty}{inproceedings}{}
-      \name{author}{4}{}{%
-        {{hash=b31d3d0b5b905b404083b93c7a418fd3}{%
-           family={Van\bibnamedelima Amersfoort},
-           familyi={V\bibinitperiod\bibinitdelim A\bibinitperiod},
-           given={Joost},
-           giveni={J\bibinitperiod}}}%
-        {{hash=901f01ae77fb6a76c3f1ce5dfb3de257}{%
-           family={Smith},
-           familyi={S\bibinitperiod},
-           given={Lewis},
-           giveni={L\bibinitperiod}}}%
-        {{hash=a71fae003da84f44e31d26e868859945}{%
-           family={Teh},
-           familyi={T\bibinitperiod},
-           given={Yee\bibnamedelima Whye},
-           giveni={Y\bibinitperiod\bibinitdelim W\bibinitperiod}}}%
-        {{hash=d4f394bd4030e20e7b1399e0abe7dc6a}{%
-           family={Gal},
-           familyi={G\bibinitperiod},
-           given={Yarin},
-           giveni={Y\bibinitperiod}}}%
-      }
-      \list{organization}{1}{%
-        {PMLR}%
-      }
-      \strng{namehash}{ba57c5fc16ce70ff2f72c3d2b7e5f5f9}
-      \strng{fullhash}{054ffbffb6fd9e201f6c9b667d898114}
-      \strng{bibnamehash}{4e083fddcf96fbbb725b1604d8aba567}
-      \strng{authorbibnamehash}{4e083fddcf96fbbb725b1604d8aba567}
-      \strng{authornamehash}{ba57c5fc16ce70ff2f72c3d2b7e5f5f9}
-      \strng{authorfullhash}{054ffbffb6fd9e201f6c9b667d898114}
-      \field{sortinit}{3}
-      \field{sortinithash}{a37a8ef248a93c322189792c34fc68c9}
-      \field{labelnamesource}{author}
-      \field{labeltitlesource}{title}
-      \field{booktitle}{International Conference on Machine Learning}
-      \field{title}{Uncertainty estimation using a single deep deterministic neural network}
-      \field{year}{2020}
-      \field{pages}{9690\bibrangedash 9700}
-      \range{pages}{11}
-    \endentry
-    \entry{barron2019general}{inproceedings}{}
-      \name{author}{1}{}{%
-        {{hash=562f3254a241932db4a6d44a97473ec5}{%
-           family={Barron},
-           familyi={B\bibinitperiod},
-           given={Jonathan\bibnamedelima T},
-           giveni={J\bibinitperiod\bibinitdelim T\bibinitperiod}}}%
-      }
-      \strng{namehash}{562f3254a241932db4a6d44a97473ec5}
-      \strng{fullhash}{562f3254a241932db4a6d44a97473ec5}
-      \strng{bibnamehash}{562f3254a241932db4a6d44a97473ec5}
-      \strng{authorbibnamehash}{562f3254a241932db4a6d44a97473ec5}
-      \strng{authornamehash}{562f3254a241932db4a6d44a97473ec5}
-      \strng{authorfullhash}{562f3254a241932db4a6d44a97473ec5}
-      \field{sortinit}{4}
-      \field{sortinithash}{e071e0bcb44634fab398d68ad04e69f4}
-      \field{labelnamesource}{author}
-      \field{labeltitlesource}{title}
-      \field{booktitle}{Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition}
-      \field{title}{A general and adaptive robust loss function}
-      \field{year}{2019}
-      \field{pages}{4331\bibrangedash 4339}
-      \range{pages}{9}
-    \endentry
-    \entry{lathuiliere2018deepgum}{inproceedings}{}
-      \name{author}{4}{}{%
-        {{hash=b2c5dc937028a84be7a9acf304073c9a}{%
-           family={Lathuili{è}re},
-           familyi={L\bibinitperiod},
-           given={St{é}phane},
-           giveni={S\bibinitperiod}}}%
-        {{hash=60c229fc5299ae44e9d1af5ea8948774}{%
-           family={Mesejo},
-           familyi={M\bibinitperiod},
-           given={Pablo},
-           giveni={P\bibinitperiod}}}%
-        {{hash=dc307510b5416849a7b4bf16806b21ed}{%
-           family={Alameda-Pineda},
-           familyi={A\bibinithyphendelim P\bibinitperiod},
-           given={Xavier},
-           giveni={X\bibinitperiod}}}%
-        {{hash=eefba46f15eb1fc31142defb790d8005}{%
-           family={Horaud},
-           familyi={H\bibinitperiod},
-           given={Radu},
-           giveni={R\bibinitperiod}}}%
-      }
-      \strng{namehash}{8c482d71d994d57ca04dd19c383fe031}
-      \strng{fullhash}{94c9cc6288d6ae518768e70405b467bb}
-      \strng{bibnamehash}{b22d4046f421ed3e006f7f8b6d9b5970}
-      \strng{authorbibnamehash}{b22d4046f421ed3e006f7f8b6d9b5970}
-      \strng{authornamehash}{8c482d71d994d57ca04dd19c383fe031}
-      \strng{authorfullhash}{94c9cc6288d6ae518768e70405b467bb}
-      \field{sortinit}{4}
-      \field{sortinithash}{e071e0bcb44634fab398d68ad04e69f4}
-      \field{labelnamesource}{author}
-      \field{labeltitlesource}{title}
-      \field{booktitle}{Proceedings of the European Conference on Computer Vision (ECCV)}
-      \field{title}{Deepgum: Learning deep robust regression with a gaussian-uniform mixture model}
-      \field{year}{2018}
-      \field{pages}{202\bibrangedash 217}
-      \range{pages}{16}
-    \endentry
   \enddatalist
-  \missing{(}
 \endrefsection
 \endinput
 
