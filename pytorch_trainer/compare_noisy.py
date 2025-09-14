@@ -55,8 +55,8 @@ trained_models = {
         ["gaussian/gaussian_with_outliers_True_resnet.pth", 5.0],
     ],
     Model.Evidential: [
-        ["evidential/evidential_with_outliers_None_resnet.pth", 0.0],
-        ["evidential/evidential_with_outliers_True_resnet.pth", 5.0],
+        ["evidential/evidential_with_outliers_None_resnet_trial2.pth", 0.0],
+        ["evidential/evidential_with_outliers_True_resnet_trial2.pth", 5.0],
     ],
     Model.Laplace: [
         ["laplace/laplace_with_outliers_None_resnet.pth", 0.0],
@@ -179,6 +179,70 @@ def get_prediction_summary(model, dataloader, device, method, model_path, eps=0.
             for y,mu,var,beta in zip(keypoints.cpu().numpy(), pred_mean.cpu().numpy(), pred_scale.cpu().numpy(), beta.cpu().numpy())]
         batch_summaries.extend(summary)
     return batch_summaries
+
+def gen_calibration_plot(df_image, eps=0.0, ood=False, plot=True, name=''):
+    print(f"Generating calibration plot with eps={eps}, ood={ood}")
+    df_pixel = df_image[(df_image["Epsilon"]==eps) & (df_image["OOD"]==ood)]
+    # df = df.iloc[::10]
+
+    df_calibration = list()
+
+    for method, model_path_list in trained_models.items():
+        for model_i, model_path in enumerate(model_path_list):
+            df_model = df_pixel[(df_pixel["Method"]==method.value)]
+            df_model = df_model[['Method', 'Keypoint', 'Mu', 'Var', 'Beta']]
+            df_model = df_model.explode(['Keypoint', 'Mu', 'Var', 'Beta'])
+            df_model = df_model.astype({"Keypoint": float, "Mu": float, "Var": float, "Beta": float})
+            expected_p = np.arange(41)/40.
+
+            observed_p = list()
+            for p in expected_p:
+                if method == Model.Generalized:
+                    ppf = scipy.stats.gennorm.ppf(p, loc=df_model["Mu"], scale=df_model["Var"], beta=df_model["Beta"])
+                elif method == Model.Laplace:
+                    ppf = scipy.stats.laplace.ppf(p, loc=df_model["Mu"], scale=df_model["Var"])
+                elif method == Model.Gaussian:
+                    ppf = scipy.stats.norm.ppf(p, loc=df_model["Mu"], scale=np.sqrt(df_model["Var"]))
+                elif method == Model.Evidential:
+                    ppf = scipy.stats.norm.ppf(p, loc=df_model["Mu"], scale=np.sqrt(df_model["Var"]))
+
+                obs_p = (df_model["Keypoint"] < ppf).mean()
+                observed_p.append(obs_p)
+
+            df_single = {'Method': method.value, 'Model Path': model_path,
+                'Expected Conf.': expected_p, 'Observed Conf.': observed_p}
+            df_calibration.append(df_single)
+
+    df_truth = {'Method': Model.GroundTruth.value, 'Model Path': "",
+        'Expected Conf.': expected_p, 'Observed Conf.': expected_p}
+    df_calibration.append(df_truth)
+    df_calibration = pd.DataFrame(df_calibration)
+    df_calibration = df_calibration.explode(['Expected Conf.', 'Observed Conf.'])
+
+    df_calibration['Calibration Error'] = np.abs(df_calibration['Expected Conf.'] - df_calibration['Observed Conf.'])
+    df_calibration["Epsilon"] = eps
+    table = df_calibration.groupby(["Method"])["Calibration Error"].mean().reset_index()
+    table = pd.pivot_table(table, values="Calibration Error", index="Method", aggfunc=[np.mean, np.std, scipy.stats.sem])
+
+    if plot:
+        print(table)
+        table.to_csv(os.path.join(output_dir, "calib_errors.csv"))
+
+        print("Plotting confidence plots")
+        plt.figure(figsize=(14.2*cm/2.0,14.2*cm/2.0))
+        sns.lineplot(x="Expected Conf.", y="Observed Conf.", hue="Method", data=df_calibration)
+        plt.legend(fontsize='xx-small')
+        plt.savefig(os.path.join(output_dir, f"calib_eps_{eps}_ood_{name}_{ood}.pdf"), bbox_inches='tight')
+        plt.show()
+
+        plt.figure(figsize=(14.2*cm,14.2*cm/2.0))
+        g = sns.FacetGrid(df_calibration, col="Method", legend_out=False)
+        g = g.map_dataframe(sns.lineplot, x="Expected Conf.", y="Observed Conf.", hue="Model Path")#.add_legend()
+        plt.savefig(os.path.join(output_dir, f"calib_eps-{eps}_ood-{ood}_panel.pdf"), bbox_inches='tight')
+        plt.show()
+
+    return df_calibration, table
+
 
 def gen_interval_score_plot(df_image):
     print(f"Generating Interval score")
@@ -312,4 +376,7 @@ else:
 
 #df_image["Mu"] = df_image["Mu"] * IMG_SIZE
 #df_image["Keypoint"] = df_image["Keypoint"] * IMG_SIZE
-gen_interval_score_plot(df_image)
+#gen_interval_score_plot(df_image)
+#df_pixel = df_pixel.replace({'Outliers': {0.0: 'Clean', 5.0: 'Outliers'}})
+#gen_calibration_plot(df_image[df_image['Outliers'] == 0.0] , name='clean')
+gen_calibration_plot(df_image[df_image['Outliers'] == 5.0] , name='outlier')

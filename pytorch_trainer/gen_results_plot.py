@@ -327,15 +327,14 @@ def gen_interval_score_plot(df_image):
      + (2/0.95)*(df_pixel["lower"]-df_pixel["Keypoint"])*(df_pixel["Keypoint"]<df_pixel["lower"]) \
      + (2/0.95)*(df_pixel["Keypoint"] - df_pixel["upper"])*(df_pixel["Keypoint"]>df_pixel["upper"])
 
-    print ('#################Interval Score ###################')
-    print (df_pixel.groupby(["Method", "Epsilon"])['Interval Score'].describe() )
-    print ('################# RMSE ###################')
-    print (df_pixel.groupby(["Method", "Epsilon"])['RMSE'].describe() )
-    print ('################# Var ###################')
-    print (df_pixel.groupby(["Method", "Epsilon"])['Var'].describe() )
-    print ('################# Beta  ###################')
-    print (df_pixel.groupby(["Method", "Epsilon"])['Beta'].describe() )
-    
+    table = df_pixel.groupby(["Method", "Epsilon"])['Interval Score'].mean().reset_index()
+    table = table[table['Epsilon'] == 0.0]
+    print (table)
+    table.to_csv(os.path.join(output_dir, "interval_score_outliers.csv"))
+    table = df_pixel.groupby(["Method", "Epsilon"])['RMSE'].mean().reset_index()
+    table = table[table['Epsilon'] == 0.0]
+    print (table)
+    table.to_csv(os.path.join(output_dir, "rmse_score_outliers.csv"))
 
     cm = 1/2.54  # centimeters in inches
     plt.figure(figsize=(14.2*cm/3.0, 14.2*cm/3.0))
@@ -478,7 +477,7 @@ def gen_ood_comparison(df_image, unc_key="Entropy"):
         min_val = df_pixel.loc[mask, 'Entropy'].min()
         max_val = df_pixel.loc[mask, 'Entropy'].max()
 
-        df_pixel.loc[mask, 'Normalized_Entropy'] = (
+        df_pixel.loc[mask, 'Normalized Entropy'] = (
             df_pixel.loc[mask, 'Entropy'] - min_val) / (max_val - min_val)
     df_by_method = df_pixel.groupby(["Method","Model Path", "OOD"])
     df_by_image = df_pixel.groupby([df_pixel.index, "Method","Model Path", "OOD"])
@@ -534,7 +533,7 @@ def gen_ood_comparison(df_image, unc_key="Entropy"):
     cm = 1/2.54  # centimeters in inches
     fig = plt.figure(figsize=(14.2*cm/2.0,14.2*cm/2.0))
     #sns.catplot(x="Method", y=unc_key, hue="OOD", data=df_mean_unc_img, kind="box", whis=0.5, showfliers=False)
-    g = sns.boxplot(y="Method", x=unc_key, hue="OOD", data=df_mean_unc_img, whis=0.5, showfliers=False)
+    g = sns.boxplot(y="Method", x="Normalized Entropy", hue="OOD", data=df_pixel, whis=0.5, showfliers=False)
     g.get_legend().remove()
     handles, labels = g.get_legend_handles_labels()
     print ("OOD Labels ", labels)
@@ -597,8 +596,8 @@ else:
     df_image = compute_predictions()
     df_image.to_pickle("cached_keypoint_results.pkl")
 
-#gen_calibration_plot(df_image)
+gen_calibration_plot(df_image)
 #gen_interval_score_plot(df_image)
-gen_adv_plots(df_image)
-gen_ood_comparison(df_image)
+#gen_adv_plots(df_image)
+#gen_ood_comparison(df_image)
             
